@@ -1,0 +1,9 @@
+.idea/
+.vscode/
+
+/go.sum
+/result/
+/internals/database
+
+*.exe
+pills_parser-macos-arm*
