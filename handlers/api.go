@@ -2,204 +2,98 @@ package handlers
 
 import (
 	"bytes"
+	"compress/flate"
+	"compress/gzip"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-
-	"github.com/00unnmd/pills_parser/internals/utils"
-	"github.com/00unnmd/pills_parser/models"
+	"os"
 )
 
-func getBodyByte(searchQuery string, regionKey string) []byte {
-	body := models.RequestBody{
-		OperationName: "SearchQuery",
-		Query: `query SearchQuery($search: ProductSearch!, $regionID: ID!, $advertisementType: AdvertisementType!, $query: String, $skipFeaturing: Boolean = false) {
-                products(search: $search) { 
-                    items {
-                        ...ProductSummaryFragment
-                        reviewsCount
-                    }
-                    total
-                }
-                featuring: advertisement(
-                    regionID: $regionID
-                    type: $advertisementType
-                    query: $query
-                ) @skip(if: $skipFeaturing) {
-                    title
-                    banner
-                    advertiser
-                    counters {
-                        ...AdvertisedCountersFragment
-                    }
-                    products {
-                        ...ProductCardRegularFragment
-                    }
-                }
-            }
-            fragment ProductSummaryFragment on ProductSummary {
-                name
-                price
-                discount
-                priceOld
-                maxQuantity
-                producer
-                isBundle
-                rating
-            }
-            fragment AdvertisedCountersFragment on AdvertisementCounters {
-                imps
-                track
-                creative
-                id
-                name
-                position
-            }
-            fragment CountersFragment on Counters {
-                yandex {
-                    ...YandexCountersFragment
-                }
-                advertisement {
-                    ...AdvertisedCountersFragment
-                }
-            }
-            fragment YandexCountersFragment on YandexCounters {
-                items {
-                    value
-                    utmConfig {
-                        key
-                        value
-                    }
-                    token
-                }
-            }
-            fragment ProductCardRegularFragment on ProductSummary {
-                id
-                lastPrice
-                alias
-                sku
-                availableForOrder
-                availableForBooking
-                hasOnlyBookingPrices
-                canPayOnPickup
-                maxQuantity
-                expirationDate
-                deliveryDate
-                discount
-                url
-                image
-                isFavorite
-                price
-                priceOld
-                seoBasketText
-                seoPriceText
-                priceTypeID
-                name
-                pickupDate
-                rating
-                producerCountry
-                warning
-                isAdv
-                isBundle
-                brand {
-                    alias
-                    name
-                }
-                badges {
-                    description
-                    title
-                    type
-                    dateEnd
-                    src
-                    color
-                }
-                category {
-                    id
-                    name
-                    path
-                }
-                counters {
-                    ...CountersFragment
-                }
-                prices {
-                    dateExpired
-                    discount
-                    maxQuantity
-                    price
-                    priceOld
-                    priceTypeID
-                    dateExpiredOpened
-                    isExpirating
-                    hasPrefix
-                }
-                bundleItemsSimple {
-                    id
-                    quantity
-                    shortName
-                }
-                    reviewsDisabled
-            }`,
+func makeAPIRequest(serviceName string, method, url string, queryParams map[string]string, bodyData interface{}) ([]byte, error) {
+	var body io.Reader
 
-		Variables: models.RequestBodyVariables{
-			Search: models.VariablesSearch{
-				AdvertisementKey: "search",
-				Filters: models.SearchFilters{
-					Simple: [1]models.FiltersSimple{
-						{"query", searchQuery},
-					},
-				},
-				Paginator: models.SearchPaginator{
-					Limit:  100,
-					Offset: 0,
-				},
-				RegionID: regionKey,
-				Query:    searchQuery,
-			},
-			RegionID:          regionKey,
-			AdvertisementType: "featuring_search",
-			Query:             searchQuery,
-			SkipFeaturing:     false,
-		},
+	if bodyData != nil {
+		jsonData, err := json.Marshal(bodyData)
+		if err != nil {
+			return nil, fmt.Errorf("makeAPIRequest! error marshaling request body: %w", err)
+		}
+
+		body = bytes.NewBuffer(jsonData)
 	}
 
-	bodyByte, err := json.Marshal(body)
-
+	req, err := http.NewRequest(method, url, body)
 	if err != nil {
-		fmt.Println("Ошибка преобразования body в JSON:", err)
+		return nil, fmt.Errorf("makeAPIRequest! error creating request: %w", err)
 	}
 
-	return bodyByte
-}
+	if queryParams != nil {
+		q := req.URL.Query()
 
-func RequestZdravsitiData(pillValue string, regionKey string, regionValue string) []models.PillsItem {
-	bodyByte := getBodyByte(pillValue, regionKey)
+		for key, value := range queryParams {
+			q.Add(key, value)
+		}
 
-	pillsRequest, err := http.NewRequest(
-		"POST",
-		"https://zdravcity.ru/bff/query",
-		bytes.NewBuffer(bodyByte),
-	)
-	pillsRequest.Header.Set("Content-Type", "application/json")
-	pillsRequest.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+		req.URL.RawQuery = q.Encode()
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36")
+
+	if serviceName == "AR" {
+		req.Header.Add("Accept", "application/json, text/plain, */*")
+		req.Header.Add("Accept-Encoding", "gzip, deflate, br, zstd")
+		req.Header.Add("Accept-Language", "en-GB,en-US;q=0.9,en;q=0.8,ru;q=0.7")
+		req.Header.Add("Authorization", os.Getenv("AR_AUTH_TOKEN"))
+		req.Header.Add("Connection", "keep-alive")
+		req.Header.Add("Device-id", os.Getenv("AR_DEVICE_ID"))
+		req.Header.Add("Host", os.Getenv("AR_HOST"))
+		req.Header.Add("Origin", os.Getenv("AR_ORIGIN"))
+		req.Header.Add("Referer", os.Getenv("AR_REFERER"))
+		req.Header.Add("Sec-ch-ua", `"Chromium";v="136", "Google Chrome";v="136", "Not.A/Brand";v="99"`)
+		req.Header.Add("Sec-ch-ua-mobile", "?0")
+		req.Header.Add("Sec-ch-ua-platform", "Windows")
+		req.Header.Add("Sec-Fetch-Mode", "cors")
+		req.Header.Add("Sec-Fetch-Site", "same-site")
+		req.Header.Add("User-session-id", os.Getenv("AR_USER_SESSION_ID"))
+		req.Header.Add("X-active-exp", os.Getenv("AR_X_ACTIVE_EXP"))
+		req.Header.Add("X-ciid-b", os.Getenv("AR_X_CIID_B"))
+		req.Header.Add("X-ciid-h", os.Getenv("AR_X_CIID_H"))
+		req.Header.Add("X-dreg-tst", os.Getenv("AR_X_DREG_TST"))
+		req.Header.Add("ym-aru-visorc", os.Getenv("AR_YM_ARU_VISORC"))
+	}
+
+	if serviceName == "AR" && url == os.Getenv("AR_REQ_USER_CITY") {
+		req.Header.Add("Content-length", "53")
+	}
 
 	client := &http.Client{}
-	resp, err := client.Do(pillsRequest)
-
+	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("makeAPIRequest! error making request: %w", err)
 	}
 	defer resp.Body.Close()
 
-	respBodyJSON, _ := io.ReadAll(resp.Body)
-	respBody := models.ResponseBody{}
-	json.Unmarshal([]byte(respBodyJSON), &respBody)
-	productItems := respBody.Data.Products.Items
-	filteredProductItems := utils.FilterByProducer(productItems, utils.ProducerNames)
-
-	for i := range filteredProductItems {
-		filteredProductItems[i].Region = regionValue
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("makeAPIRequest! unexpected status code: %d", resp.StatusCode)
 	}
 
-	return filteredProductItems
+	var reader io.Reader
+	switch resp.Header.Get("Content-Encoding") {
+	case "gzip":
+		gzReader, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("makeAPIRequest! gzip decompression failed: %w", err)
+		}
+
+		defer gzReader.Close()
+		reader = gzReader
+	case "deflate":
+		reader = flate.NewReader(resp.Body)
+	default:
+		reader = resp.Body
+	}
+
+	return io.ReadAll(reader)
 }

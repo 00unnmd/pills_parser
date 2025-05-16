@@ -1,5 +1,7 @@
+.git
 .idea/
 .vscode/
+.env
 
 /go.sum
 /result/
