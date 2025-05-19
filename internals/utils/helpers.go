@@ -18,6 +18,24 @@ func PrintStructAsJSON(data []models.ParsedItem) {
 	fmt.Println(string(jsonData))
 }
 
+func CreatePIWithError(pillValue string, regionValue string, err error) []models.ParsedItem {
+	fmt.Println(err.Error())
+	return []models.ParsedItem{
+		{
+			Region:       regionValue,
+			Name:         pillValue,
+			Price:        0,
+			Discount:     0,
+			PriceOld:     0,
+			MaxQuantity:  0,
+			Producer:     "",
+			Rating:       0,
+			ReviewsCount: 0,
+			Error:        err.Error(),
+		},
+	}
+}
+
 func ParseRawData[T models.ParsedFieldsGetter](rawData []T) []models.ParsedItem {
 	var parsed []models.ParsedItem
 
@@ -90,6 +108,7 @@ func GenerateXLSX(data map[string][]models.ParsedItem) {
 		file.SetCellValue(sheetName, "G1", "producer")
 		file.SetCellValue(sheetName, "H1", "rating")
 		file.SetCellValue(sheetName, "I1", "reviewsCount")
+		file.SetCellValue(sheetName, "J1", "Error")
 
 		for i := range item {
 			file.SetCellValue(sheetName, "A"+strconv.Itoa(i+2), item[i].Region)
@@ -101,6 +120,7 @@ func GenerateXLSX(data map[string][]models.ParsedItem) {
 			file.SetCellValue(sheetName, "G"+strconv.Itoa(i+2), item[i].Producer)
 			file.SetCellValue(sheetName, "H"+strconv.Itoa(i+2), item[i].Rating)
 			file.SetCellValue(sheetName, "I"+strconv.Itoa(i+2), item[i].ReviewsCount)
+			file.SetCellValue(sheetName, "J"+strconv.Itoa(i+2), item[i].Error)
 		}
 	}
 
@@ -108,6 +128,7 @@ func GenerateXLSX(data map[string][]models.ParsedItem) {
 		"A": 30,
 		"B": 60,
 		"G": 40,
+		"J": 60,
 	}
 
 	for _, sheet := range file.GetSheetList() {

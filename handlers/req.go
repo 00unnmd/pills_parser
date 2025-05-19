@@ -15,13 +15,11 @@ func getZSAllRegions(pillValue string, bar *pb.ProgressBar) []models.ParsedItem 
 
 	for key, value := range utils.ZSRegions {
 		bar.Set("prefix", value)
-
 		time.Sleep(utils.RequestDelay)
 
 		pillsForRegion, err := GetZSPills(pillValue, key, value)
 		if err != nil {
-			fmt.Println("err: ", err)
-			break
+			pillsForRegion = utils.CreatePIWithError(pillValue, value, err)
 		}
 
 		result = append(result, pillsForRegion...)
@@ -51,11 +49,11 @@ func getARAllPills(regionValue string, bar *pb.ProgressBar) []models.ParsedItem 
 
 	for _, value := range utils.PillsList {
 		bar.Set("prefix", "AptekaRu: "+value)
+		time.Sleep(utils.RequestDelay)
 
 		pillsAllRegions, err := GetARPills(value, regionValue)
 		if err != nil {
-			fmt.Println("err: ", err)
-			break
+			pillsAllRegions = utils.CreatePIWithError(value, regionValue, err)
 		}
 
 		result = append(result, pillsAllRegions...)
@@ -74,10 +72,9 @@ func getARData(pillsBar *pb.ProgressBar, regionsBar *pb.ProgressBar) []models.Pa
 
 		_, err := ChangeARRegion(id)
 		if err != nil {
+			fmt.Println("err: ", err)
 			break
 		}
-
-		time.Sleep(utils.RequestDelay)
 
 		regionAllPills := getARAllPills(value, pillsBar)
 		result = append(result, regionAllPills...)
@@ -92,13 +89,11 @@ func getEAAllPills(ctx context.Context, bar *pb.ProgressBar, regionKey string, r
 
 	for _, value := range utils.PillsList {
 		bar.Set("prefix", "EApteka: "+value)
-
 		time.Sleep(utils.RequestDelay)
 
 		pillsAllRegions, err := GetEAPills(ctx, value, regionKey, regionValue)
 		if err != nil {
-			fmt.Println("err: ", err)
-			break
+			pillsAllRegions = utils.CreatePIWithError(value, regionValue, err)
 		}
 
 		result = append(result, pillsAllRegions...)
@@ -128,8 +123,8 @@ func getEAAllData(pillsBar *pb.ProgressBar, regionsBar *pb.ProgressBar) []models
 			break
 		}
 
-		pillsForRegion := getEAAllPills(ctx, pillsBar, key, value)
-		result = append(result, pillsForRegion...)
+		regionAllPills := getEAAllPills(ctx, pillsBar, key, value)
+		result = append(result, regionAllPills...)
 		regionsBar.Increment()
 	}
 

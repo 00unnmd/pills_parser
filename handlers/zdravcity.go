@@ -187,8 +187,11 @@ func GetZSPills(pillValue string, regionKey string, regionValue string) ([]model
 	}
 
 	filteredProductItems := utils.FilterByProducer(respBody.Data.Products.Items, pillValue)
-	parsedProductItems := utils.ParseRawData(filteredProductItems)
+	if len(filteredProductItems) == 0 {
+		return nil, fmt.Errorf("не найдено препаратов удовлетворяющих запросу: len(filteredProductItems) == 0")
+	}
 
+	parsedProductItems := utils.ParseRawData(filteredProductItems)
 	for i := range parsedProductItems {
 		parsedProductItems[i].Region = regionValue
 	}

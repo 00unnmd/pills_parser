@@ -6,7 +6,7 @@ var OzonProducerNames = []string{`ООО "Озон"`, "Озон ООО/Озон 
 var AgroFarmProducerNames = []string{`Арго-Фарм`, `АРГО-ФАРМ ООО`, `Арго-Фарм, Россия`}
 var KirovFFProducerNames = []string{`Кировская фармацевтическая фабрика`, `Кировская фармацевтическая фабрика АО`, `Кировская фармфабрика, Россия`}
 
-var RequestDelay = 2 * time.Second
+var RequestDelay = 3 * time.Second
 
 var ZSRegions = map[string]string{
 	"moscowregion": "Москва и область",

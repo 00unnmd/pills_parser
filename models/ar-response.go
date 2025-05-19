@@ -280,7 +280,7 @@ func (p ARItemInfo) GetFields() ParsedItem {
 		Price:        p.Price,
 		Discount:     p.Profit,
 		PriceOld:     p.NoDiscPrice,
-		MaxQuantity:  1, // TODO calculate??
+		MaxQuantity:  1,
 		Producer:     p.Vendor,
 		Rating:       p.Rating,
 		ReviewsCount: p.ReviewsCount,

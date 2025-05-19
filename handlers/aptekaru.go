@@ -102,6 +102,10 @@ func GetARPills(pillValue string, regionValue string) ([]models.ParsedItem, erro
 	}
 
 	filteredProductItems := utils.FilterByProducer(respBody.Result, pillValue)
+	if len(filteredProductItems) == 0 {
+		return nil, fmt.Errorf("не найдено препаратов удовлетворяющих запросу: len(filteredProductItems) == 0")
+	}
+
 	result := make([]models.ParsedItem, 0)
 
 	for _, item := range filteredProductItems {
@@ -109,7 +113,8 @@ func GetARPills(pillValue string, regionValue string) ([]models.ParsedItem, erro
 
 		groupItems, err := getARGroupInfo(item)
 		if err != nil {
-			fmt.Println(err)
+			pi := utils.CreatePIWithError(pillValue, regionValue, err)
+			result = append(result, pi...)
 			break
 		}
 

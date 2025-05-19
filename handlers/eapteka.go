@@ -97,19 +97,23 @@ func parseEAHTMLData(html string, region string, pillValue string) ([]models.Par
 	doc.Find("article.listing-card.js-neon-item").Each(func(i int, s *goquery.Selection) {
 		id := s.AttrOr("data-id", strconv.Itoa(i))
 		name := s.AttrOr("data-oldma-item-serp-name", "N/A")
+		errStr := ""
 
 		price, priceOld, discount, err := getEAPrices(s)
 		if err != nil {
+			errStr = errStr + err.Error()
 			fmt.Println(err)
 		}
 
 		producer, err := getEAProducer(s)
 		if err != nil {
+			errStr = errStr + err.Error()
 			fmt.Println(err)
 		}
 
 		rating, reviewsCount, err := getEARatingReviews(s)
 		if err != nil {
+			errStr = errStr + err.Error()
 			fmt.Println(err)
 		}
 
@@ -124,11 +128,17 @@ func parseEAHTMLData(html string, region string, pillValue string) ([]models.Par
 			Producer:     producer,
 			Rating:       float64(rating),
 			ReviewsCount: reviewsCount,
+			Error:        errStr,
 		})
 	})
 
 	filteredResult := utils.FilterByProducer(result, pillValue)
-	return filteredResult, nil
+	if len(filteredResult) == 0 {
+		errF := fmt.Errorf(`не найдено препаратов удовлетворяющих запросу: len(filteredResult) == 0`)
+		return nil, errF
+	} else {
+		return filteredResult, nil
+	}
 }
 
 func CreateEAContext() (context.Context, context.CancelFunc, error) {
@@ -207,5 +217,14 @@ func GetEAPills(ctx context.Context, pillValue string, regionKey string, regionV
 		return nil, fmt.Errorf("GetEAPills err get pills: %w", err)
 	}
 
-	return parseEAHTMLData(html, regionValue, pillValue)
+	if strings.Contains(html, `<div class="sec-empty">`) {
+		return nil, fmt.Errorf(`не найдено препаратов удовлетворяющих запросу: html.Contains("<div class="sec-empty">")`)
+	}
+
+	result, err := parseEAHTMLData(html, regionValue, pillValue)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }

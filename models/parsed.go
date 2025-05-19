@@ -11,6 +11,7 @@ type ParsedItem struct {
 	Producer     string  `json:"producer"`
 	Rating       float64 `json:"rating"`
 	ReviewsCount int     `json:"reviewsCount"`
+	Error        string  `json:"error"`
 }
 
 func (p ParsedItem) GetProducer() string {
