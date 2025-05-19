@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -15,11 +16,11 @@ import (
 
 func PrintStructAsJSON(data []models.ParsedItem) {
 	jsonData, _ := json.MarshalIndent(data, "", "  ")
-	fmt.Println(string(jsonData))
+	log.Println(string(jsonData))
 }
 
 func CreatePIWithError(pillValue string, regionValue string, err error) []models.ParsedItem {
-	fmt.Println(err.Error())
+	log.Println(err.Error())
 	return []models.ParsedItem{
 		{
 			Region:       regionValue,
@@ -87,7 +88,7 @@ func getFilePath() (string, error) {
 }
 
 func GenerateXLSX(data map[string][]models.ParsedItem) {
-	fmt.Println("Запущен процесс генерации документа...")
+	log.Println("Запущен процесс генерации документа...")
 	file := excelize.NewFile()
 
 	for key, item := range data {
@@ -95,7 +96,7 @@ func GenerateXLSX(data map[string][]models.ParsedItem) {
 		_, err := file.NewSheet(sheetName)
 
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 
@@ -134,7 +135,7 @@ func GenerateXLSX(data map[string][]models.ParsedItem) {
 	for _, sheet := range file.GetSheetList() {
 		for col, width := range colWidths {
 			if err := file.SetColWidth(sheet, col, col, width); err != nil {
-				fmt.Println(err)
+				log.Println(err)
 			}
 		}
 		if sheet == "Sheet1" {
@@ -144,15 +145,15 @@ func GenerateXLSX(data map[string][]models.ParsedItem) {
 
 	filePath, err := getFilePath()
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return
 	}
 
 	if err := file.SaveAs(filePath); err != nil {
-		fmt.Println("Ошибка сохранения файла. Парсинг не завершен.")
-		fmt.Println("err: ", err)
+		log.Println("Ошибка сохранения файла. Парсинг не завершен.")
+		log.Println("err: ", err)
 		return
 	}
 
-	fmt.Println("Документ успешно сгенерирован (result/). Парсинг завершен.")
+	log.Println("Документ успешно сгенерирован (result/). Парсинг завершен.")
 }

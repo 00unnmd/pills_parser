@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -117,23 +118,23 @@ func saveData(db *sql.DB, data map[string][]models.ParsedItem) error {
 func SaveToDB(data map[string][]models.ParsedItem) {
 	db, err := connectToPostgres()
 	if err != nil {
-		fmt.Printf("InitDB err: %s", err)
+		log.Printf("InitDB err: %s", err)
 		return
 	}
 	defer db.Close()
 
 	newDB, err := createDBWithTable(db, data)
 	if err != nil {
-		fmt.Printf("InitDB err: %s", err)
+		log.Printf("InitDB err: %s", err)
 		return
 	}
 	defer newDB.Close()
 
 	err = saveData(newDB, data)
 	if err != nil {
-		fmt.Printf("InitDB err: %s", err)
+		log.Printf("InitDB err: %s", err)
 		return
 	}
 
-	fmt.Println("Данные успешно сохранены в БД")
+	log.Println("Данные успешно сохранены в БД")
 }

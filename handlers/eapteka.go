@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -102,19 +103,19 @@ func parseEAHTMLData(html string, region string, pillValue string) ([]models.Par
 		price, priceOld, discount, err := getEAPrices(s)
 		if err != nil {
 			errStr = errStr + err.Error()
-			fmt.Println(err)
+			log.Println(err)
 		}
 
 		producer, err := getEAProducer(s)
 		if err != nil {
 			errStr = errStr + err.Error()
-			fmt.Println(err)
+			log.Println(err)
 		}
 
 		rating, reviewsCount, err := getEARatingReviews(s)
 		if err != nil {
 			errStr = errStr + err.Error()
-			fmt.Println(err)
+			log.Println(err)
 		}
 
 		result = append(result, models.ParsedItem{

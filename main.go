@@ -4,8 +4,6 @@ import (
 	"log"
 
 	"github.com/00unnmd/pills_parser/handlers"
-	"github.com/00unnmd/pills_parser/internals/database"
-	"github.com/00unnmd/pills_parser/internals/utils"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
@@ -16,9 +14,10 @@ func parseNow() {
 		log.Fatal("error loading .env file")
 	}
 
-	data := handlers.GetAllData()
-	database.SaveToDB(data)
-	utils.GenerateXLSX(data)
+	// data :=
+	handlers.GetAllData()
+	// database.SaveToDB(data)
+	// utils.GenerateXLSX(data)
 }
 
 func main() {

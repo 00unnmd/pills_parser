@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"time"
 
 	"github.com/00unnmd/pills_parser/internals/utils"
@@ -72,7 +72,7 @@ func getARData(pillsBar *pb.ProgressBar, regionsBar *pb.ProgressBar) []models.Pa
 
 		_, err := ChangeARRegion(id)
 		if err != nil {
-			fmt.Println("err: ", err)
+			log.Println("err: ", err)
 			break
 		}
 
@@ -108,7 +108,7 @@ func getEAAllData(pillsBar *pb.ProgressBar, regionsBar *pb.ProgressBar) []models
 
 	ctx, cancel, err := CreateEAContext()
 	if err != nil {
-		fmt.Println("err: ", err)
+		log.Println("err: ", err)
 		return result
 	}
 	defer cancel()
@@ -119,7 +119,7 @@ func getEAAllData(pillsBar *pb.ProgressBar, regionsBar *pb.ProgressBar) []models
 
 		_, err := ChangeEARegion(ctx, key)
 		if err != nil {
-			fmt.Println("err: ", err)
+			log.Println("err: ", err)
 			break
 		}
 
@@ -132,13 +132,13 @@ func getEAAllData(pillsBar *pb.ProgressBar, regionsBar *pb.ProgressBar) []models
 }
 
 func GetAllData() map[string][]models.ParsedItem {
-	fmt.Println("Процесс получения данных...")
-	ZSPillsBar := pb.New(len(utils.PillsList))
-	ZSRegionsBar := pb.New(len(utils.ZSRegions))
-	ARPillsBar := pb.New(len(utils.PillsList))
-	ARRegionsBar := pb.New(len(utils.ARRegions))
-	EAPillsBar := pb.New(len(utils.PillsList))
-	EARegionsBar := pb.New(len(utils.EARegions))
+	log.Println("Процесс получения данных...")
+	ZSPillsBar := pb.New(len(utils.PillsList)).SetRefreshRate(time.Second * 3)
+	ZSRegionsBar := pb.New(len(utils.ZSRegions)).SetRefreshRate(time.Second * 3)
+	ARPillsBar := pb.New(len(utils.PillsList)).SetRefreshRate(time.Second * 3)
+	ARRegionsBar := pb.New(len(utils.ARRegions)).SetRefreshRate(time.Second * 3)
+	EAPillsBar := pb.New(len(utils.PillsList)).SetRefreshRate(time.Second * 3)
+	EARegionsBar := pb.New(len(utils.EARegions)).SetRefreshRate(time.Second * 3)
 
 	ZSChan := make(chan []models.ParsedItem)
 	ARChan := make(chan []models.ParsedItem)
@@ -149,11 +149,9 @@ func GetAllData() map[string][]models.ParsedItem {
 	go func() {
 		ZSChan <- getZSData(ZSPillsBar, ZSRegionsBar)
 	}()
-
 	go func() {
 		ARChan <- getARData(ARPillsBar, ARRegionsBar)
 	}()
-
 	go func() {
 		EAChan <- getEAAllData(EAPillsBar, EARegionsBar)
 	}()
@@ -163,7 +161,7 @@ func GetAllData() map[string][]models.ParsedItem {
 	EAData := <-EAChan
 	pool.Stop()
 
-	fmt.Println("Данные успешно получены.")
+	log.Println("Данные успешно получены.")
 
 	return map[string][]models.ParsedItem{
 		"zdravcity": ZSData,
