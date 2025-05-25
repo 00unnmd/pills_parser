@@ -1,11 +1,13 @@
 package utils
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -13,11 +15,6 @@ import (
 	"github.com/00unnmd/pills_parser/models"
 	"github.com/xuri/excelize/v2"
 )
-
-func PrintStructAsJSON(data []models.ParsedItem) {
-	jsonData, _ := json.MarshalIndent(data, "", "  ")
-	log.Println(string(jsonData))
-}
 
 func CreatePIWithError(pillValue string, regionValue string, err error) []models.ParsedItem {
 	log.Println(err.Error())
@@ -72,6 +69,80 @@ func FilterByProducer[T models.ProducerGetter](filterItems []T, pillValue string
 	}
 
 	return filtered
+}
+
+func GetPillsReqFormValues(r *http.Request) (int, int, string, string, string) {
+	page, err := strconv.Atoi(r.FormValue("page"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	perPage, err := strconv.Atoi(r.FormValue("perPage"))
+	if err != nil || perPage < 1 {
+		perPage = 10
+	}
+
+	sortField := r.FormValue("sort")
+	if sortField == "" {
+		sortField = "name"
+	}
+
+	sortOrder := r.FormValue("order")
+	if sortOrder == "" {
+		sortOrder = "ASC"
+	}
+
+	filter := r.FormValue("filter")
+
+	return page, perPage, sortField, sortOrder, filter
+}
+
+func FindLatestParsingFile(dir string) (string, error) {
+	files, err := os.ReadDir(dir)
+	if err != nil {
+		return "", err
+	}
+
+	patternReg := regexp.MustCompile(`^parsing-go-(\d{2})\.(\d{2})\.(\d{4})\.xlsx$`)
+
+	var validFiles []models.FileInfo
+
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+
+		matches := patternReg.FindStringSubmatch(file.Name())
+		if len(matches) != 4 {
+			continue
+		}
+
+		fileDate, err := time.Parse("02.01.2006", matches[1]+"."+matches[2]+"."+matches[3])
+		if err != nil {
+			continue
+		}
+
+		info, err := file.Info()
+		if err != nil {
+			continue
+		}
+
+		validFiles = append(validFiles, models.FileInfo{
+			Path:    filepath.Join(dir, file.Name()),
+			ModTime: info.ModTime(),
+			Date:    fileDate,
+		})
+	}
+
+	if len(validFiles) == 0 {
+		return "", os.ErrNotExist
+	}
+
+	sort.Slice(validFiles, func(i, j int) bool {
+		return validFiles[i].Date.After(validFiles[j].Date)
+	})
+
+	return validFiles[0].Path, nil
 }
 
 func getFilePath() (string, error) {

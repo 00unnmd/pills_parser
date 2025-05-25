@@ -1,4 +1,6 @@
-package models
+package pharmacies
+
+import "github.com/00unnmd/pills_parser/models"
 
 type zsProductItem struct {
 	Region       string
@@ -18,8 +20,8 @@ func (p zsProductItem) GetProducer() string {
 	return p.Producer
 }
 
-func (p zsProductItem) GetFields() ParsedItem {
-	return ParsedItem{
+func (p zsProductItem) GetFields() models.ParsedItem {
+	return models.ParsedItem{
 		// Region
 		Id:           p.Id,
 		Name:         p.Name,

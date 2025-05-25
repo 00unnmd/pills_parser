@@ -1,16 +1,17 @@
-package handlers
+package pharmacies
 
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/00unnmd/pills_parser/models/pharmacies"
 	"os"
 
 	"github.com/00unnmd/pills_parser/internals/utils"
 	"github.com/00unnmd/pills_parser/models"
 )
 
-func getBodyByte(searchQuery string, regionKey string) models.ZSRequestBody {
-	body := models.ZSRequestBody{
+func getBodyByte(searchQuery string, regionKey string) pharmacies.ZSRequestBody {
+	body := pharmacies.ZSRequestBody{
 		OperationName: "SearchQuery",
 		Query: `query SearchQuery($search: ProductSearch!, $regionID: ID!, $advertisementType: AdvertisementType!, $query: String, $skipFeaturing: Boolean = false) {
                 products(search: $search) { 
@@ -139,18 +140,18 @@ func getBodyByte(searchQuery string, regionKey string) models.ZSRequestBody {
                     reviewsDisabled
             }`,
 
-		Variables: models.ZSRequestBodyVariables{
-			Search: models.ZSSearch{
+		Variables: pharmacies.ZSRequestBodyVariables{
+			Search: pharmacies.ZSSearch{
 				AdvertisementKey: "search",
-				Filters: models.ZSSearchFilters{
-					Simple: [1]models.ZSSimple{
+				Filters: pharmacies.ZSSearchFilters{
+					Simple: [1]pharmacies.ZSSimple{
 						{
 							Id:  "query",
 							Val: searchQuery,
 						},
 					},
 				},
-				Paginator: models.ZSSearchPaginator{
+				Paginator: pharmacies.ZSSearchPaginator{
 					Limit:  100,
 					Offset: 0,
 				},
@@ -181,7 +182,7 @@ func GetZSPills(pillValue string, regionKey string, regionValue string) ([]model
 		return nil, err
 	}
 
-	var respBody models.ZSSearchBody
+	var respBody pharmacies.ZSSearchBody
 	if err := json.Unmarshal([]byte(respBodyByte), &respBody); err != nil {
 		return nil, fmt.Errorf("GetZSPills error unmarshaling response: %w", err)
 	}

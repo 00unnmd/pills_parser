@@ -1,6 +1,9 @@
-package models
+package pharmacies
 
-import "time"
+import (
+	"github.com/00unnmd/pills_parser/models"
+	"time"
+)
 
 type arPhoto struct {
 	Original     string
@@ -272,8 +275,8 @@ type ARItemInfo struct {
 	VideoDesc              interface{} `json:"videoDesc"`
 }
 
-func (p ARItemInfo) GetFields() ParsedItem {
-	return ParsedItem{
+func (p ARItemInfo) GetFields() models.ParsedItem {
+	return models.ParsedItem{
 		// Region
 		Id:           p.ID,
 		Name:         p.Name,

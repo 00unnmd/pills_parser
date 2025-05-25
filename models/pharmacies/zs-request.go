@@ -1,4 +1,4 @@
-package models
+package pharmacies
 
 type ZSSimple struct {
 	Id  string `json:"id"`

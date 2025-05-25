@@ -1,8 +1,9 @@
-package handlers
+package pharmacies
 
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/00unnmd/pills_parser/models/pharmacies"
 	"os"
 	"time"
 
@@ -10,7 +11,7 @@ import (
 	"github.com/00unnmd/pills_parser/models"
 )
 
-func getGroupId(resultItem models.ARResultItem) (string, error) {
+func getGroupId(resultItem pharmacies.ARResultItem) (string, error) {
 	if resultItem.UniqueItemInfo.Id != "" {
 		return resultItem.UniqueItemInfo.Id, nil
 	}
@@ -21,7 +22,7 @@ func getGroupId(resultItem models.ARResultItem) (string, error) {
 	return "", fmt.Errorf("getGroupId: no valid groupID found")
 }
 
-func getARGroupInfo(resultItem models.ARResultItem) ([]models.ARItemInfo, error) {
+func getARGroupInfo(resultItem pharmacies.ARResultItem) ([]pharmacies.ARItemInfo, error) {
 	groupId, err := getGroupId(resultItem)
 	if err != nil {
 		return nil, fmt.Errorf("getARGroupInfo error getting groudID: %w", err)
@@ -42,12 +43,12 @@ func getARGroupInfo(resultItem models.ARResultItem) ([]models.ARItemInfo, error)
 		return nil, err
 	}
 
-	var respBody models.ARGroupInfoBody
+	var respBody pharmacies.ARGroupInfoBody
 	if err := json.Unmarshal([]byte(respBodyByte), &respBody); err != nil {
 		return nil, fmt.Errorf("getARGroupInfo error unmarshaling response: %w", err)
 	}
 
-	var groupItems []models.ARItemInfo
+	var groupItems []pharmacies.ARItemInfo
 	for _, groupItem := range respBody.GroupItems {
 		groupItems = append(groupItems, groupItem.ItemInfos...)
 	}
@@ -96,7 +97,7 @@ func GetARPills(pillValue string, regionValue string) ([]models.ParsedItem, erro
 		return nil, err
 	}
 
-	var respBody models.ARSearchBody
+	var respBody pharmacies.ARSearchBody
 	if err := json.Unmarshal([]byte(respBodyByte), &respBody); err != nil {
 		return nil, fmt.Errorf("GetARPills error unmarshaling response: %w", err)
 	}

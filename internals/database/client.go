@@ -10,17 +10,20 @@ import (
 	"github.com/00unnmd/pills_parser/models"
 )
 
+// TODO переписать логику для сохранения в уже существующей бд os.Getenv("DB_NAME")
+// каждый раз обновлять таблицы вместо создания новой бд
 func loadDBConfig() string {
 	return fmt.Sprintf(
-		"user=%s password=%s host=%s port=%s sslmode=disable client_encoding=UTF8",
+		"user=%s password=%s host=%s port=%s dbname=%s sslmode=disable client_encoding=UTF8",
 		os.Getenv("DB_USER"),
 		os.Getenv("DB_PASSWORD"),
 		os.Getenv("DB_HOST"),
 		os.Getenv("DB_PORT"),
+		os.Getenv("DB_NAME"),
 	)
 }
 
-func connectToPostgres() (*sql.DB, error) {
+func ConnectToPostgres() (*sql.DB, error) {
 	connStr := loadDBConfig()
 
 	db, err := sql.Open("postgres", connStr)
@@ -116,7 +119,7 @@ func saveData(db *sql.DB, data map[string][]models.ParsedItem) error {
 }
 
 func SaveToDB(data map[string][]models.ParsedItem) {
-	db, err := connectToPostgres()
+	db, err := ConnectToPostgres()
 	if err != nil {
 		log.Printf("InitDB err: %s", err)
 		return

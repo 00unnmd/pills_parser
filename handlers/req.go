@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"github.com/00unnmd/pills_parser/handlers/pharmacies"
 	"log"
 	"time"
 
@@ -17,7 +18,7 @@ func getZSAllRegions(pillValue string, bar *pb.ProgressBar) []models.ParsedItem 
 		bar.Set("prefix", value)
 		time.Sleep(utils.RequestDelay)
 
-		pillsForRegion, err := GetZSPills(pillValue, key, value)
+		pillsForRegion, err := pharmacies.GetZSPills(pillValue, key, value)
 		if err != nil {
 			pillsForRegion = utils.CreatePIWithError(pillValue, value, err)
 		}
@@ -51,7 +52,7 @@ func getARAllPills(regionValue string, bar *pb.ProgressBar) []models.ParsedItem 
 		bar.Set("prefix", "AptekaRu: "+value)
 		time.Sleep(utils.RequestDelay)
 
-		pillsAllRegions, err := GetARPills(value, regionValue)
+		pillsAllRegions, err := pharmacies.GetARPills(value, regionValue)
 		if err != nil {
 			pillsAllRegions = utils.CreatePIWithError(value, regionValue, err)
 		}
@@ -70,7 +71,7 @@ func getARData(pillsBar *pb.ProgressBar, regionsBar *pb.ProgressBar) []models.Pa
 		pillsBar.SetCurrent(0)
 		regionsBar.Set("prefix", value)
 
-		_, err := ChangeARRegion(id)
+		_, err := pharmacies.ChangeARRegion(id)
 		if err != nil {
 			log.Println("err: ", err)
 			break
@@ -91,7 +92,7 @@ func getEAAllPills(ctx context.Context, bar *pb.ProgressBar, regionKey string, r
 		bar.Set("prefix", "EApteka: "+value)
 		time.Sleep(utils.RequestDelay)
 
-		pillsAllRegions, err := GetEAPills(ctx, value, regionKey, regionValue)
+		pillsAllRegions, err := pharmacies.GetEAPills(ctx, value, regionKey, regionValue)
 		if err != nil {
 			pillsAllRegions = utils.CreatePIWithError(value, regionValue, err)
 		}
@@ -106,7 +107,7 @@ func getEAAllPills(ctx context.Context, bar *pb.ProgressBar, regionKey string, r
 func getEAAllData(pillsBar *pb.ProgressBar, regionsBar *pb.ProgressBar) []models.ParsedItem {
 	var result []models.ParsedItem
 
-	ctx, cancel, err := CreateEAContext()
+	ctx, cancel, err := pharmacies.CreateEAContext()
 	if err != nil {
 		log.Println("err: ", err)
 		return result
@@ -117,7 +118,7 @@ func getEAAllData(pillsBar *pb.ProgressBar, regionsBar *pb.ProgressBar) []models
 		pillsBar.SetCurrent(0)
 		regionsBar.Set("prefix", value)
 
-		_, err := ChangeEARegion(ctx, key)
+		_, err := pharmacies.ChangeEARegion(ctx, key)
 		if err != nil {
 			log.Println("err: ", err)
 			break
