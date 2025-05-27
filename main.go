@@ -10,6 +10,7 @@ import (
 	"github.com/rs/cors"
 	"log"
 	"net/http"
+	"os"
 )
 
 func parseNow() {
@@ -36,7 +37,7 @@ func main() {
 	}
 
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173", "http://192.168.31.106:5173", "http://192.168.31.106:5175"},
+		AllowedOrigins:   []string{"http://localhost:5173", os.Getenv("PROD_ORIGIN")},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 		ExposedHeaders:   []string{"Content-Disposition"},
@@ -44,6 +45,11 @@ func main() {
 	})
 	handler := c.Handler(r)
 
-	log.Println("Сервер запущен на :8080")
-	log.Fatal(http.ListenAndServe(":8080", handler))
+	port := os.Getenv("BACKEND_PORT")
+	if port == "" {
+		port = "5000"
+	}
+
+	log.Printf("Сервер запущен на :%s", port)
+	log.Fatal(http.ListenAndServe(":"+port, handler))
 }
