@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/00unnmd/pills_parser/internal/domain"
 	"github.com/00unnmd/pills_parser/pkg/utils"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -31,7 +30,7 @@ func getEASearchReqUrl(pillValue string, regionKey string) string {
 	}
 }
 
-func getEADiscount(price int, priceOld int) int {
+func getEADiscount(price float64, priceOld float64) float64 {
 	if priceOld == 0 {
 		return 0
 	} else {
@@ -39,7 +38,7 @@ func getEADiscount(price int, priceOld int) int {
 	}
 }
 
-func getEAPrices(sel *goquery.Selection) (int, int, int, error) {
+func getEAPrices(sel *goquery.Selection) (float64, float64, int, error) {
 	isInStock := sel.AttrOr("data-oldma-item-serp-is-in-stock", "0")
 	if isInStock != "1" {
 		return 0, 0, 0, nil
@@ -49,14 +48,16 @@ func getEAPrices(sel *goquery.Selection) (int, int, int, error) {
 	priceOldSel := sel.Find("span.listing-card__price-old")
 	priceOld := priceOldSel.AttrOr("data-old-price", "0")
 
-	priceInt, errP := strconv.Atoi(strings.ReplaceAll(price, " ", ""))
-	priceOldInt, errPO := strconv.Atoi(strings.ReplaceAll(priceOld, " ", ""))
+	priceFl, errP := strconv.ParseFloat(strings.ReplaceAll(price, " ", ""), 64)
+	priceOldFl, errPO := strconv.ParseFloat(strings.ReplaceAll(priceOld, " ", ""), 64)
 	if errP != nil || errPO != nil {
 		return 0, 0, 0, fmt.Errorf("getEAPrices err converting string to int: %w, %w", errP, errPO)
 	}
 
-	discount := getEADiscount(priceInt, priceOldInt)
-	return priceInt, priceOldInt, discount, nil
+	discount := getEADiscount(priceFl, priceOldFl)
+	discountPercent := utils.GetDiscountPercent(discount, priceOldFl)
+
+	return priceFl, discount, discountPercent, nil
 }
 
 func getEAProducer(sel *goquery.Selection) (string, error) {
@@ -71,6 +72,20 @@ func getEAProducer(sel *goquery.Selection) (string, error) {
 
 	producerName := producerSel.Text()
 	return producerName, nil
+}
+
+func getEAMNN(sel *goquery.Selection) string {
+	mnnSel := sel.
+		Find("span.listing-card__ingredient").
+		ParentFiltered("p").
+		Find("a")
+
+	if mnnSel.Length() == 0 {
+		return "mnn not found"
+	}
+
+	mnnName := mnnSel.Text()
+	return mnnName
 }
 
 func getEARatingReviews(sel *goquery.Selection) (int, int, error) {
@@ -96,41 +111,39 @@ func parseEAHTMLData(html string, region string, pillValue string, withFilter bo
 	var result []domain.ParsedItem
 
 	doc.Find("article.listing-card.js-neon-item").Each(func(i int, s *goquery.Selection) {
-		id := s.AttrOr("data-id", strconv.Itoa(i))
 		name := s.AttrOr("data-oldma-item-serp-name", "N/A")
 		errStr := ""
 
-		price, priceOld, discount, err := getEAPrices(s)
+		mnn := getEAMNN(s)
+
+		price, discount, discountPercent, err := getEAPrices(s)
 		if err != nil {
 			errStr = errStr + err.Error()
-			log.Println(err)
 		}
 
 		producer, err := getEAProducer(s)
 		if err != nil {
 			errStr = errStr + err.Error()
-			log.Println(err)
 		}
 
 		rating, reviewsCount, err := getEARatingReviews(s)
 		if err != nil {
 			errStr = errStr + err.Error()
-			log.Println(err)
 		}
 
 		result = append(result, domain.ParsedItem{
-			Id:           id,
-			Region:       region,
-			Name:         name,
-			Price:        float64(price),
-			Discount:     float64(discount),
-			PriceOld:     float64(priceOld),
-			MaxQuantity:  0,
-			Producer:     producer,
-			Rating:       float64(rating),
-			ReviewsCount: reviewsCount,
-			SearchValue:  pillValue,
-			Error:        errStr,
+			Pharmacy:        "eapteka",
+			Region:          region,
+			Name:            name,
+			Mnn:             mnn,
+			Price:           price,
+			Discount:        discount,
+			DiscountPercent: discountPercent,
+			Producer:        producer,
+			Rating:          float64(rating),
+			ReviewsCount:    reviewsCount,
+			SearchValue:     pillValue,
+			Error:           errStr,
 		})
 	})
 

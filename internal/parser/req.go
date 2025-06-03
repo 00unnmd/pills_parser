@@ -13,24 +13,24 @@ import (
 func getZSData(pillsList map[int]string, regionsList map[string]string, pillsBar *pb.ProgressBar, regionsBar *pb.ProgressBar, ozonFilter bool) []domain.ParsedItem {
 	var result []domain.ParsedItem
 
-	for _, pillValue := range pillsList {
-		regionsBar.SetCurrent(0)
-		pillsBar.Set("prefix", "ZdravCity: "+pillValue)
+	for regionKey, regionValue := range regionsList {
+		pillsBar.SetCurrent(0)
+		regionsBar.Set("prefix", regionValue)
 
-		for key, value := range regionsList {
-			regionsBar.Set("prefix", value)
+		for _, pillValue := range pillsList {
+			pillsBar.Set("prefix", "Zdravcity: "+pillValue)
 			time.Sleep(utils.RequestDelay)
 
-			pillsForRegion, err := calls.GetZSPills(pillValue, key, value, ozonFilter)
+			pillsForRegion, err := calls.GetZSPills(pillValue, regionKey, regionValue, ozonFilter)
 			if err != nil {
-				pillsForRegion = utils.CreatePIWithError(pillValue, value, err)
+				pillsForRegion = utils.CreatePIWithError(pillValue, regionValue, err, "zdravcity")
 			}
 
 			result = append(result, pillsForRegion...)
-			regionsBar.Increment()
+			pillsBar.Increment()
 		}
 
-		pillsBar.Increment()
+		regionsBar.Increment()
 	}
 
 	return result
@@ -55,7 +55,7 @@ func getARData(pillsList map[int]string, regionsList map[string]string, pillsBar
 
 			pillsAllRegions, err := calls.GetARPills(value, regionValue, ozonFilter)
 			if err != nil {
-				pillsAllRegions = utils.CreatePIWithError(value, regionValue, err)
+				pillsAllRegions = utils.CreatePIWithError(value, regionValue, err, "aptekaru")
 			}
 
 			result = append(result, pillsAllRegions...)
@@ -94,7 +94,7 @@ func getEAData(pillsList map[int]string, regionsList map[string]string, pillsBar
 
 			pillsAllRegions, err := calls.GetEAPills(ctx, value, regionKey, regionValue, ozonFilter)
 			if err != nil {
-				pillsAllRegions = utils.CreatePIWithError(value, regionValue, err)
+				pillsAllRegions = utils.CreatePIWithError(value, regionValue, err, "eapteka")
 			}
 
 			result = append(result, pillsAllRegions...)
@@ -107,7 +107,7 @@ func getEAData(pillsList map[int]string, regionsList map[string]string, pillsBar
 	return result
 }
 
-func GetOzonAllData() map[string][]domain.ParsedItem {
+func GetOzonAllData() []domain.ParsedItem {
 	log.Println("Процесс получения данных...")
 	ZSPillsBar := pb.New(len(utils.OzonPillsList)).SetRefreshRate(time.Second * 3)
 	ZSRegionsBar := pb.New(len(utils.ZSRegions)).SetRefreshRate(time.Second * 3)
@@ -138,15 +138,10 @@ func GetOzonAllData() map[string][]domain.ParsedItem {
 	pool.Stop()
 
 	log.Println("Данные успешно получены.")
-
-	return map[string][]domain.ParsedItem{
-		"zdravcity": ZSData,
-		"aptekaRu":  ARData,
-		"eapteka":   EAData,
-	}
+	return append(append(ZSData, ARData...), EAData...)
 }
 
-func GetMNNAllData() map[string][]domain.ParsedItem {
+func GetMNNAllData() []domain.ParsedItem {
 	log.Println("Процесс получения данных...")
 	ZSPillsBar := pb.New(len(utils.CompetitorsMNNList)).SetRefreshRate(time.Second * 3)
 	ZSRegionsBar := pb.New(len(utils.ZSRegions)).SetRefreshRate(time.Second * 3)
@@ -177,15 +172,10 @@ func GetMNNAllData() map[string][]domain.ParsedItem {
 	pool.Stop()
 
 	log.Println("Данные успешно получены.")
-
-	return map[string][]domain.ParsedItem{
-		"zdravcity": ZSData,
-		"aptekaRu":  ARData,
-		"eapteka":   EAData,
-	}
+	return append(append(ZSData, ARData...), EAData...)
 }
 
-func GetCompetitorsAllData() map[string][]domain.ParsedItem {
+func GetCompetitorsAllData() []domain.ParsedItem {
 	log.Println("Процесс получения данных...")
 	ZSPillsBar := pb.New(len(utils.CompetitorsPillsList)).SetRefreshRate(time.Second * 3)
 	ZSRegionsBar := pb.New(len(utils.ZSRegions)).SetRefreshRate(time.Second * 3)
@@ -216,10 +206,5 @@ func GetCompetitorsAllData() map[string][]domain.ParsedItem {
 	pool.Stop()
 
 	log.Println("Данные успешно получены.")
-
-	return map[string][]domain.ParsedItem{
-		"zdravcity": ZSData,
-		"aptekaRu":  ARData,
-		"eapteka":   EAData,
-	}
+	return append(append(ZSData, ARData...), EAData...)
 }

@@ -19,7 +19,7 @@ func NewPillsHandler(db *sql.DB) *PillsHandler {
 	return &PillsHandler{db: db}
 }
 
-func (h *PillsHandler) GetZSPills(w http.ResponseWriter, r *http.Request) {
+func (h *PillsHandler) GetOzonPills(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "Invalid query parameters", http.StatusBadRequest)
 		return
@@ -27,7 +27,7 @@ func (h *PillsHandler) GetZSPills(w http.ResponseWriter, r *http.Request) {
 
 	page, perPage, sortField, sortOrder, filter := utils.GetPillsReqFormValues(r)
 
-	query := "SELECT id, region, name, price, discount, priceOld, maxQuantity, producer, rating, reviewsCount, error FROM zdravcity"
+	query := "SELECT id, pharmacy, region, name, mnn, price, discount, discountPercent, producer, rating, reviewsCount, searchValue, createdAt, error FROM ozon_data"
 	var whereClause string
 	var args []interface{}
 	if filter != "" {
@@ -47,10 +47,9 @@ func (h *PillsHandler) GetZSPills(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	var data []domain.ParsedItem
-
 	for rows.Next() {
 		var item domain.ParsedItem
-		err := rows.Scan(&item.Id, &item.Region, &item.Name, &item.Price, &item.Discount, &item.PriceOld, &item.MaxQuantity, &item.Producer, &item.Rating, &item.ReviewsCount, &item.Error)
+		err := rows.Scan(&item.Id, &item.Pharmacy, &item.Region, &item.Name, &item.Mnn, &item.Price, &item.Discount, &item.DiscountPercent, &item.Producer, &item.Rating, &item.ReviewsCount, &item.SearchValue, &item.CreatedAt, &item.Error)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -59,7 +58,7 @@ func (h *PillsHandler) GetZSPills(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var totalCount int
-	countQuery := "SELECT COUNT(*) FROM zdravcity" + whereClause
+	countQuery := "SELECT COUNT(*) FROM ozon_data" + whereClause
 	if err := h.db.QueryRow(countQuery, args...).Scan(&totalCount); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -73,7 +72,7 @@ func (h *PillsHandler) GetZSPills(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func (h *PillsHandler) GetARPills(w http.ResponseWriter, r *http.Request) {
+func (h *PillsHandler) GetMNNPills(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "Invalid query parameters", http.StatusBadRequest)
 		return
@@ -81,7 +80,7 @@ func (h *PillsHandler) GetARPills(w http.ResponseWriter, r *http.Request) {
 
 	page, perPage, sortField, sortOrder, filter := utils.GetPillsReqFormValues(r)
 
-	query := "SELECT id, region, name, price, discount, priceOld, maxQuantity, producer, rating, reviewsCount, error FROM aptekaru"
+	query := "SELECT id, pharmacy, region, name, mnn, price, discount, discountPercent, producer, rating, reviewsCount, searchValue, createdAt, error FROM mnn_data"
 	var whereClause string
 	var args []interface{}
 	if filter != "" {
@@ -101,10 +100,9 @@ func (h *PillsHandler) GetARPills(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	var data []domain.ParsedItem
-
 	for rows.Next() {
 		var item domain.ParsedItem
-		err := rows.Scan(&item.Id, &item.Region, &item.Name, &item.Price, &item.Discount, &item.PriceOld, &item.MaxQuantity, &item.Producer, &item.Rating, &item.ReviewsCount, &item.Error)
+		err := rows.Scan(&item.Id, &item.Pharmacy, &item.Region, &item.Name, &item.Mnn, &item.Price, &item.Discount, &item.DiscountPercent, &item.Producer, &item.Rating, &item.ReviewsCount, &item.SearchValue, &item.CreatedAt, &item.Error)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -113,7 +111,7 @@ func (h *PillsHandler) GetARPills(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var totalCount int
-	countQuery := "SELECT COUNT(*) FROM aptekaru" + whereClause
+	countQuery := "SELECT COUNT(*) FROM mnn_data" + whereClause
 	if err := h.db.QueryRow(countQuery, args...).Scan(&totalCount); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -127,7 +125,7 @@ func (h *PillsHandler) GetARPills(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func (h *PillsHandler) GetEAPills(w http.ResponseWriter, r *http.Request) {
+func (h *PillsHandler) GetCompetitorsPills(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "Invalid query parameters", http.StatusBadRequest)
 		return
@@ -135,7 +133,7 @@ func (h *PillsHandler) GetEAPills(w http.ResponseWriter, r *http.Request) {
 
 	page, perPage, sortField, sortOrder, filter := utils.GetPillsReqFormValues(r)
 
-	query := "SELECT id, region, name, price, discount, priceOld, maxQuantity, producer, rating, reviewsCount, error FROM eapteka"
+	query := "SELECT id, pharmacy, region, name, mnn, price, discount, discountPercent, producer, rating, reviewsCount, searchValue, createdAt, error FROM competitors_data"
 	var whereClause string
 	var args []interface{}
 	if filter != "" {
@@ -155,10 +153,9 @@ func (h *PillsHandler) GetEAPills(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	var data []domain.ParsedItem
-
 	for rows.Next() {
 		var item domain.ParsedItem
-		err := rows.Scan(&item.Id, &item.Region, &item.Name, &item.Price, &item.Discount, &item.PriceOld, &item.MaxQuantity, &item.Producer, &item.Rating, &item.ReviewsCount, &item.Error)
+		err := rows.Scan(&item.Id, &item.Pharmacy, &item.Region, &item.Name, &item.Mnn, &item.Price, &item.Discount, &item.DiscountPercent, &item.Producer, &item.Rating, &item.ReviewsCount, &item.SearchValue, &item.CreatedAt, &item.Error)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -167,7 +164,7 @@ func (h *PillsHandler) GetEAPills(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var totalCount int
-	countQuery := "SELECT COUNT(*) FROM eapteka" + whereClause
+	countQuery := "SELECT COUNT(*) FROM competitors_data" + whereClause
 	if err := h.db.QueryRow(countQuery, args...).Scan(&totalCount); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

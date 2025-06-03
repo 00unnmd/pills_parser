@@ -1,15 +1,22 @@
 package domain
 
+import (
+	"strings"
+)
+
+type MNN struct {
+	Title string `json:"title"`
+}
+
 type ZSProductItem struct {
 	Region       string
 	Id           string  `json:"id"`
 	Name         string  `json:"name"`
+	Mnns         []MNN   `json:"mnns"`
 	Price        float64 `json:"price"`
 	Discount     float64 `json:"discount"`
 	PriceOld     float64 `json:"priceOld"`
-	MaxQuantity  int     `json:"maxQuantity"`
 	Producer     string  `json:"producer"`
-	IsBundle     bool    `json:"isBundle"`
 	Rating       float64 `json:"rating"`
 	ReviewsCount int     `json:"reviewsCount"`
 }
@@ -19,14 +26,17 @@ func (p ZSProductItem) GetProducer() string {
 }
 
 func (p ZSProductItem) GetFields() ParsedItem {
+	titles := make([]string, len(p.Mnns))
+	for i, item := range p.Mnns {
+		titles[i] = item.Title
+	}
+
 	return ParsedItem{
-		// Region
-		Id:           p.Id,
 		Name:         p.Name,
+		Mnn:          strings.Join(titles, ", "),
 		Price:        p.Price,
 		Discount:     p.Discount,
 		PriceOld:     p.PriceOld,
-		MaxQuantity:  p.MaxQuantity,
 		Producer:     p.Producer,
 		Rating:       p.Rating,
 		ReviewsCount: p.ReviewsCount,

@@ -24,52 +24,52 @@ func getFilePath() (string, error) {
 	return fileName, nil
 }
 
-func GenerateXLSX(data map[string][]domain.ParsedItem) {
+func GenerateXLSX(data []domain.ParsedItem, sheetName string) {
 	log.Println("Запущен процесс генерации документа...")
 	file := excelize.NewFile()
 
-	for key, item := range data {
-		sheetName := key
-		_, err := file.NewSheet(sheetName)
+	_, err := file.NewSheet(sheetName)
 
-		if err != nil {
-			log.Println(err)
-			return
-		}
+	if err != nil {
+		log.Println(err)
+		return
+	}
 
-		file.SetCellValue(sheetName, "A1", "Region")
-		file.SetCellValue(sheetName, "B1", "Name")
-		file.SetCellValue(sheetName, "C1", "Price")
-		file.SetCellValue(sheetName, "D1", "Discount")
-		file.SetCellValue(sheetName, "E1", "priceOld")
-		file.SetCellValue(sheetName, "F1", "maxQuantity")
-		file.SetCellValue(sheetName, "G1", "producer")
-		file.SetCellValue(sheetName, "H1", "rating")
-		file.SetCellValue(sheetName, "I1", "reviewsCount")
-		file.SetCellValue(sheetName, "J1", "SearchValue")
-		file.SetCellValue(sheetName, "K1", "Error")
+	file.SetCellValue(sheetName, "A1", "Pharmacy")
+	file.SetCellValue(sheetName, "B1", "Region")
+	file.SetCellValue(sheetName, "C1", "Name")
+	file.SetCellValue(sheetName, "D1", "MNN")
+	file.SetCellValue(sheetName, "E1", "Price")
+	file.SetCellValue(sheetName, "F1", "Discount")
+	file.SetCellValue(sheetName, "G1", "DiscountPercent")
+	file.SetCellValue(sheetName, "H1", "producer")
+	file.SetCellValue(sheetName, "I1", "rating")
+	file.SetCellValue(sheetName, "J1", "reviewsCount")
+	file.SetCellValue(sheetName, "K1", "SearchValue")
+	file.SetCellValue(sheetName, "L1", "Error")
 
-		for i := range item {
-			file.SetCellValue(sheetName, "A"+strconv.Itoa(i+2), item[i].Region)
-			file.SetCellValue(sheetName, "B"+strconv.Itoa(i+2), item[i].Name)
-			file.SetCellValue(sheetName, "C"+strconv.Itoa(i+2), item[i].Price)
-			file.SetCellValue(sheetName, "D"+strconv.Itoa(i+2), item[i].Discount)
-			file.SetCellValue(sheetName, "E"+strconv.Itoa(i+2), item[i].PriceOld)
-			file.SetCellValue(sheetName, "F"+strconv.Itoa(i+2), item[i].MaxQuantity)
-			file.SetCellValue(sheetName, "G"+strconv.Itoa(i+2), item[i].Producer)
-			file.SetCellValue(sheetName, "H"+strconv.Itoa(i+2), item[i].Rating)
-			file.SetCellValue(sheetName, "I"+strconv.Itoa(i+2), item[i].ReviewsCount)
-			file.SetCellValue(sheetName, "J"+strconv.Itoa(i+2), item[i].SearchValue)
-			file.SetCellValue(sheetName, "K"+strconv.Itoa(i+2), item[i].Error)
-		}
+	for i, item := range data {
+		file.SetCellValue(sheetName, "A"+strconv.Itoa(i+2), item.Pharmacy)
+		file.SetCellValue(sheetName, "B"+strconv.Itoa(i+2), item.Region)
+		file.SetCellValue(sheetName, "C"+strconv.Itoa(i+2), item.Name)
+		file.SetCellValue(sheetName, "D"+strconv.Itoa(i+2), item.Mnn)
+		file.SetCellValue(sheetName, "E"+strconv.Itoa(i+2), item.Price)
+		file.SetCellValue(sheetName, "F"+strconv.Itoa(i+2), item.Discount)
+		file.SetCellValue(sheetName, "G"+strconv.Itoa(i+2), item.DiscountPercent)
+		file.SetCellValue(sheetName, "H"+strconv.Itoa(i+2), item.Producer)
+		file.SetCellValue(sheetName, "I"+strconv.Itoa(i+2), item.Rating)
+		file.SetCellValue(sheetName, "J"+strconv.Itoa(i+2), item.ReviewsCount)
+		file.SetCellValue(sheetName, "K"+strconv.Itoa(i+2), item.SearchValue)
+		file.SetCellValue(sheetName, "L"+strconv.Itoa(i+2), item.Error)
 	}
 
 	colWidths := map[string]float64{
-		"A": 30,
-		"B": 60,
-		"G": 40,
-		"K": 60,
-		"J": 30,
+		"A": 10,
+		"B": 30,
+		"C": 60,
+		"H": 40,
+		"K": 30,
+		"L": 60,
 	}
 
 	for _, sheet := range file.GetSheetList() {
