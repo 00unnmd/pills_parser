@@ -16,9 +16,9 @@ func SetupRouter(db *sql.DB) (*mux.Router, error) {
 
 	pillsRouter := apiRouter.PathPrefix("/pills").Subrouter()
 	pillsRouter.Use(authMiddleware)
-	pillsRouter.HandleFunc("/Zdravcity", pillsHandler.GetZSPills).Methods("GET")
-	pillsRouter.HandleFunc("/Aptekaru", pillsHandler.GetARPills).Methods("GET")
-	pillsRouter.HandleFunc("/Eapteka", pillsHandler.GetEAPills).Methods("GET")
+	pillsRouter.HandleFunc("/ozon", pillsHandler.GetOzonPills).Methods("GET")
+	pillsRouter.HandleFunc("/mnn", pillsHandler.GetMNNPills).Methods("GET")
+	pillsRouter.HandleFunc("/competitors", pillsHandler.GetCompetitorsPills).Methods("GET")
 	pillsRouter.HandleFunc("/export", pillsHandler.ExportPillsXLSX).Methods("GET")
 
 	return r, nil

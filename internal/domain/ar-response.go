@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"strings"
 	"time"
 )
 
@@ -276,16 +277,14 @@ type ARItemInfo struct {
 
 func (p ARItemInfo) GetFields() ParsedItem {
 	return ParsedItem{
-		// Region
-		Id:           p.ID,
-		Name:         p.Name,
-		Price:        p.Price,
-		Discount:     p.Profit,
-		PriceOld:     p.NoDiscPrice,
-		MaxQuantity:  1,
-		Producer:     p.Vendor,
-		Rating:       p.Rating,
-		ReviewsCount: p.ReviewsCount,
+		Name:            p.Name,
+		Mnn:             strings.Join(p.InterNames, ", "),
+		Price:           p.Price,
+		Discount:        p.Profit,
+		DiscountPercent: p.DiscountPercent,
+		Producer:        p.Vendor,
+		Rating:          p.Rating,
+		ReviewsCount:    p.ReviewsCount,
 	}
 }
 

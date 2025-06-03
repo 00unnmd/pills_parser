@@ -41,10 +41,11 @@ func getBodyByte(searchQuery string, regionKey string) domain.ZSRequestBody {
                 price
                 discount
                 priceOld
-                maxQuantity
                 producer
-                isBundle
                 rating
+				mnns {
+					title
+				}
             }
             fragment AdvertisedCountersFragment on AdvertisementCounters {
                 imps
@@ -200,7 +201,9 @@ func GetZSPills(pillValue string, regionKey string, regionValue string, withFilt
 	parsedProductItems := utils.ParseRawData(filteredProductItems)
 	for i := range parsedProductItems {
 		parsedProductItems[i].Region = regionValue
+		parsedProductItems[i].DiscountPercent = utils.GetDiscountPercent(parsedProductItems[i].Discount, parsedProductItems[i].PriceOld)
 		parsedProductItems[i].SearchValue = pillValue
+		parsedProductItems[i].Pharmacy = "zdravcity"
 	}
 
 	return parsedProductItems, nil

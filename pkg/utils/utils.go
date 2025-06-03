@@ -2,7 +2,7 @@ package utils
 
 import (
 	"github.com/00unnmd/pills_parser/internal/domain"
-	"log"
+	"math"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -13,21 +13,21 @@ import (
 	"time"
 )
 
-func CreatePIWithError(pillValue string, regionValue string, err error) []domain.ParsedItem {
-	log.Println(err.Error())
+func CreatePIWithError(pillValue string, regionValue string, err error, pharmacy string) []domain.ParsedItem {
 	return []domain.ParsedItem{
 		{
-			Region:       regionValue,
-			Name:         pillValue,
-			Price:        0,
-			Discount:     0,
-			PriceOld:     0,
-			MaxQuantity:  0,
-			Producer:     "",
-			Rating:       0,
-			ReviewsCount: 0,
-			SearchValue:  "",
-			Error:        err.Error(),
+			Region:          regionValue,
+			Name:            pillValue,
+			Mnn:             "",
+			Price:           0,
+			Discount:        0,
+			DiscountPercent: 0,
+			Producer:        "",
+			Rating:          0,
+			ReviewsCount:    0,
+			SearchValue:     "",
+			Error:           err.Error(),
+			Pharmacy:        pharmacy,
 		},
 	}
 }
@@ -41,6 +41,16 @@ func ParseRawData[T domain.ParsedFieldsGetter](rawData []T) []domain.ParsedItem 
 	}
 
 	return parsed
+}
+
+func GetDiscountPercent(discount float64, priceOld float64) int {
+	discountPercent := 0
+
+	if priceOld != 0 {
+		discountPercent = int(math.Round(discount / (priceOld / 100)))
+	}
+
+	return discountPercent
 }
 
 func FilterByProducer[T domain.ProducerGetter](filterItems []T, pillValue string) []T {

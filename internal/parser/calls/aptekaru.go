@@ -152,17 +152,17 @@ func GetARPills(pillValue string, regionValue string, withFilter bool) ([]domain
 	for _, item := range filteredProductItems {
 		if item.ItemsCount < 2 {
 			parsedItem := domain.ParsedItem{
-				Id:           item.Id,
-				Name:         item.TradeName,
-				Price:        item.MinPrice,
-				Discount:     item.Profit,
-				PriceOld:     item.NoDiscPrice,
-				MaxQuantity:  1,
-				Producer:     item.Vendor,
-				Rating:       item.GroupRating,
-				ReviewsCount: item.ReviewRating,
-				Region:       regionValue,
-				SearchValue:  pillValue,
+				Pharmacy:        "aptekaru",
+				Name:            item.TradeName,
+				Mnn:             strings.Join(item.InterNames, ", "),
+				Price:           item.MinPrice,
+				Discount:        item.Profit,
+				DiscountPercent: item.DiscountPercent,
+				Producer:        item.Vendor,
+				Rating:          item.GroupRating,
+				ReviewsCount:    item.ReviewRating,
+				Region:          regionValue,
+				SearchValue:     pillValue,
 			}
 
 			result = append(result, parsedItem)
@@ -171,13 +171,14 @@ func GetARPills(pillValue string, regionValue string, withFilter bool) ([]domain
 
 			groupItems, err := getARGroupInfo(item)
 			if err != nil {
-				pi := utils.CreatePIWithError(pillValue, regionValue, err)
+				pi := utils.CreatePIWithError(pillValue, regionValue, err, "aptekaru")
 				result = append(result, pi...)
 				break
 			}
 
 			parsedData := utils.ParseRawData(groupItems)
 			for i := range parsedData {
+				parsedData[i].Pharmacy = "aptekaru"
 				parsedData[i].Region = regionValue
 				parsedData[i].SearchValue = pillValue
 			}

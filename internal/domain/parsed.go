@@ -1,18 +1,21 @@
 package domain
 
 type ParsedItem struct {
-	Id           string  `json:"id"`
-	Region       string  `json:"region"`
-	Name         string  `json:"name"`
-	Price        float64 `json:"price"`
-	Discount     float64 `json:"discount"`
-	PriceOld     float64 `json:"priceOld"`
-	MaxQuantity  int     `json:"maxQuantity"`
-	Producer     string  `json:"producer"`
-	Rating       float64 `json:"rating"`
-	ReviewsCount int     `json:"reviewsCount"`
-	SearchValue  string  `json:"searchValue"`
-	Error        string  `json:"error"`
+	Id              string  `json:"id"`
+	Pharmacy        string  `json:"pharmacy"`
+	Region          string  `json:"region"`
+	Name            string  `json:"name"`
+	Mnn             string  `json:"mnn"`
+	Price           float64 `json:"price"`
+	PriceOld        float64 `json:"priceOld"`
+	Discount        float64 `json:"discount"`
+	DiscountPercent int     `json:"discountPercent"`
+	Producer        string  `json:"producer"`
+	Rating          float64 `json:"rating"`
+	ReviewsCount    int     `json:"reviewsCount"`
+	SearchValue     string  `json:"searchValue"`
+	CreatedAt       string  `json:"createdAt"`
+	Error           string  `json:"error"`
 }
 
 func (p ParsedItem) GetProducer() string {
