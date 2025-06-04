@@ -187,24 +187,15 @@ func GetZSPills(pillValue string, regionKey string, regionValue string, withFilt
 		return nil, fmt.Errorf("GetZSPills error unmarshaling response: %w", err)
 	}
 
-	var filteredProductItems []domain.ZSProductItem
+	filteredData := respBody.Data.Products.Items
 	if withFilter == true {
-		filteredProductItems = utils.FilterByProducer(respBody.Data.Products.Items, pillValue)
-	} else {
-		filteredProductItems = respBody.Data.Products.Items
+		filteredData = utils.FilterByProducer(respBody.Data.Products.Items, pillValue)
 	}
 
-	if len(filteredProductItems) == 0 {
-		return nil, fmt.Errorf("не найдено препаратов удовлетворяющих запросу: len(filteredProductItems) == 0")
+	if len(filteredData) == 0 {
+		return nil, fmt.Errorf("не найдено препаратов удовлетворяющих запросу: len(filteredData) == 0")
 	}
 
-	parsedProductItems := utils.ParseRawData(filteredProductItems)
-	for i := range parsedProductItems {
-		parsedProductItems[i].Region = regionValue
-		parsedProductItems[i].DiscountPercent = utils.GetDiscountPercent(parsedProductItems[i].Discount, parsedProductItems[i].PriceOld)
-		parsedProductItems[i].SearchValue = pillValue
-		parsedProductItems[i].Pharmacy = "zdravcity"
-	}
-
-	return parsedProductItems, nil
+	result := utils.ParseRawData("zdravcity", regionValue, pillValue, filteredData)
+	return result, nil
 }
