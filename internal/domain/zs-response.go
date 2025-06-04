@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"math"
 	"strings"
 )
 
@@ -9,7 +10,6 @@ type MNN struct {
 }
 
 type ZSProductItem struct {
-	Region       string
 	Id           string  `json:"id"`
 	Name         string  `json:"name"`
 	Mnns         []MNN   `json:"mnns"`
@@ -25,21 +25,30 @@ func (p ZSProductItem) GetProducer() string {
 	return p.Producer
 }
 
-func (p ZSProductItem) GetFields() ParsedItem {
+func (p ZSProductItem) GetFields(pharmacy string, region string, pill string) ParsedItem {
 	titles := make([]string, len(p.Mnns))
 	for i, item := range p.Mnns {
 		titles[i] = item.Title
 	}
+	mnn := strings.Join(titles, ", ")
+
+	discountPercent := 0
+	if p.PriceOld != 0 {
+		discountPercent = int(math.Round(p.Discount / (p.PriceOld / 100)))
+	}
 
 	return ParsedItem{
-		Name:         p.Name,
-		Mnn:          strings.Join(titles, ", "),
-		Price:        p.Price,
-		Discount:     p.Discount,
-		PriceOld:     p.PriceOld,
-		Producer:     p.Producer,
-		Rating:       p.Rating,
-		ReviewsCount: p.ReviewsCount,
+		Pharmacy:        pharmacy,
+		Region:          region,
+		Name:            p.Name,
+		Mnn:             mnn,
+		Price:           p.Price,
+		Discount:        p.Discount,
+		DiscountPercent: discountPercent,
+		Producer:        p.Producer,
+		Rating:          p.Rating,
+		ReviewsCount:    p.ReviewsCount,
+		SearchValue:     pill,
 	}
 }
 

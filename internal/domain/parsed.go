@@ -7,7 +7,6 @@ type ParsedItem struct {
 	Name            string  `json:"name"`
 	Mnn             string  `json:"mnn"`
 	Price           float64 `json:"price"`
-	PriceOld        float64 `json:"priceOld"`
 	Discount        float64 `json:"discount"`
 	DiscountPercent int     `json:"discountPercent"`
 	Producer        string  `json:"producer"`
@@ -18,12 +17,8 @@ type ParsedItem struct {
 	Error           string  `json:"error"`
 }
 
-func (p ParsedItem) GetProducer() string {
-	return p.Producer
-}
-
 type ParsedFieldsGetter interface {
-	GetFields() ParsedItem
+	GetFields(pharmacy string, region string, pill string) ParsedItem
 }
 
 type ProducerGetter interface {

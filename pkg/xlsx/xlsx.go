@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func getFilePath() (string, error) {
+func getFilePath(filePrefix string) (string, error) {
 	now := time.Now().Format("02.01.2006")
 	outputDir := filepath.Join("result/")
 
@@ -19,7 +19,7 @@ func getFilePath() (string, error) {
 		return "", fmt.Errorf("не удалось создать папку %s: %w", outputDir, err)
 	}
 
-	fileName := filepath.Join(outputDir, fmt.Sprintf("parsing-go-%s.xlsx", now))
+	fileName := filepath.Join(outputDir, fmt.Sprintf("%s-parsing-go-%s.xlsx", filePrefix, now))
 
 	return fileName, nil
 }
@@ -83,7 +83,7 @@ func GenerateXLSX(data []domain.ParsedItem, sheetName string) {
 		}
 	}
 
-	filePath, err := getFilePath()
+	filePath, err := getFilePath(sheetName)
 	if err != nil {
 		log.Println(err)
 		return

@@ -136,54 +136,40 @@ func GetARPills(pillValue string, regionValue string, withFilter bool) ([]domain
 		time.Sleep(utils.RequestDelay)
 	}
 
-	var filteredProductItems []domain.ARResultItem
+	filteredData := rawResult
 	if withFilter == true {
-		filteredProductItems = utils.FilterByProducer(rawResult, pillValue)
-	} else {
-		filteredProductItems = rawResult
+		filteredData = utils.FilterByProducer(rawResult, pillValue)
 	}
 
-	if len(filteredProductItems) == 0 {
-		return nil, fmt.Errorf("не найдено препаратов удовлетворяющих запросу: len(filteredProductItems) == 0")
+	if len(filteredData) == 0 {
+		return nil, fmt.Errorf("не найдено препаратов удовлетворяющих запросу: len(filteredData) == 0")
 	}
 
-	result := make([]domain.ParsedItem, 0)
+	var searchItems []domain.ARResultItem
+	var groupItems []domain.ARResultItem
 
-	for _, item := range filteredProductItems {
+	for _, item := range filteredData {
 		if item.ItemsCount < 2 {
-			parsedItem := domain.ParsedItem{
-				Pharmacy:        "aptekaru",
-				Name:            item.TradeName,
-				Mnn:             strings.Join(item.InterNames, ", "),
-				Price:           item.MinPrice,
-				Discount:        item.Profit,
-				DiscountPercent: item.DiscountPercent,
-				Producer:        item.Vendor,
-				Rating:          item.GroupRating,
-				ReviewsCount:    item.ReviewRating,
-				Region:          regionValue,
-				SearchValue:     pillValue,
-			}
-
-			result = append(result, parsedItem)
+			searchItems = append(searchItems, item)
 		} else {
-			time.Sleep(utils.RequestDelay)
-
-			groupItems, err := getARGroupInfo(item)
-			if err != nil {
-				pi := utils.CreatePIWithError(pillValue, regionValue, err, "aptekaru")
-				result = append(result, pi...)
-				break
-			}
-
-			parsedData := utils.ParseRawData(groupItems)
-			for i := range parsedData {
-				parsedData[i].Pharmacy = "aptekaru"
-				parsedData[i].Region = regionValue
-				parsedData[i].SearchValue = pillValue
-			}
-			result = append(result, parsedData...)
+			groupItems = append(groupItems, item)
 		}
+	}
+
+	result := utils.ParseRawData("aptekaru", regionValue, pillValue, searchItems)
+
+	for _, item := range groupItems {
+		time.Sleep(utils.RequestDelay)
+
+		groupItemInfos, err := getARGroupInfo(item)
+		if err != nil {
+			pi := utils.CreatePIWithError(pillValue, regionValue, err, "aptekaru")
+			result = append(result, pi...)
+			break
+		}
+
+		parsedData := utils.ParseRawData("aptekaru", regionValue, pillValue, groupItemInfos)
+		result = append(result, parsedData...)
 	}
 
 	return result, nil

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/00unnmd/pills_parser/internal/domain"
 	"github.com/00unnmd/pills_parser/pkg/utils"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -30,11 +31,27 @@ func getEASearchReqUrl(pillValue string, regionKey string) string {
 	}
 }
 
-func getEADiscount(price float64, priceOld float64) float64 {
+func getEAMNN(sel *goquery.Selection) string {
+	mnnSel := sel.
+		Find("span.listing-card__ingredient").
+		ParentFiltered("p").
+		Find("a")
+
+	if mnnSel.Length() == 0 {
+		return "mnn not found"
+	}
+
+	mnnName := mnnSel.Text()
+	return mnnName
+}
+
+func getEADiscount(price float64, priceOld float64) (float64, int) {
 	if priceOld == 0 {
-		return 0
+		return 0, 0
 	} else {
-		return priceOld - price
+		discount := priceOld - price
+		discountPercent := int(math.Round(discount / (priceOld / 100)))
+		return discount, discountPercent
 	}
 }
 
@@ -54,8 +71,7 @@ func getEAPrices(sel *goquery.Selection) (float64, float64, int, error) {
 		return 0, 0, 0, fmt.Errorf("getEAPrices err converting string to int: %w, %w", errP, errPO)
 	}
 
-	discount := getEADiscount(priceFl, priceOldFl)
-	discountPercent := utils.GetDiscountPercent(discount, priceOldFl)
+	discount, discountPercent := getEADiscount(priceFl, priceOldFl)
 
 	return priceFl, discount, discountPercent, nil
 }
@@ -74,20 +90,6 @@ func getEAProducer(sel *goquery.Selection) (string, error) {
 	return producerName, nil
 }
 
-func getEAMNN(sel *goquery.Selection) string {
-	mnnSel := sel.
-		Find("span.listing-card__ingredient").
-		ParentFiltered("p").
-		Find("a")
-
-	if mnnSel.Length() == 0 {
-		return "mnn not found"
-	}
-
-	mnnName := mnnSel.Text()
-	return mnnName
-}
-
 func getEARatingReviews(sel *goquery.Selection) (int, int, error) {
 	containerSel := sel.Find("div.listing-card__rate")
 	rating := containerSel.Find("meta[itemprop='ratingValue']").AttrOr("content", "0")
@@ -102,64 +104,63 @@ func getEARatingReviews(sel *goquery.Selection) (int, int, error) {
 	return ratingInt, reviewsInt, nil
 }
 
+func getEARawItem(s *goquery.Selection) domain.EARawItem {
+	name := s.AttrOr("data-oldma-item-serp-name", "N/A")
+	errStr := ""
+
+	mnn := getEAMNN(s)
+
+	price, discount, discountPercent, err := getEAPrices(s)
+	if err != nil {
+		errStr = errStr + err.Error()
+	}
+
+	producer, err := getEAProducer(s)
+	if err != nil {
+		errStr = errStr + err.Error()
+	}
+
+	rating, reviewsCount, err := getEARatingReviews(s)
+	if err != nil {
+		errStr = errStr + err.Error()
+	}
+
+	return domain.EARawItem{
+		Name:            name,
+		Mnn:             mnn,
+		Price:           price,
+		Discount:        discount,
+		DiscountPercent: discountPercent,
+		Producer:        producer,
+		Rating:          float64(rating),
+		ReviewsCount:    reviewsCount,
+		Error:           errStr,
+	}
+}
+
 func parseEAHTMLData(html string, region string, pillValue string, withFilter bool) ([]domain.ParsedItem, error) {
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
 	if err != nil {
 		return nil, fmt.Errorf("parseEAHTMLData new doc creation err: %w", err)
 	}
 
-	var result []domain.ParsedItem
-
+	var rawData []domain.EARawItem
 	doc.Find("article.listing-card.js-neon-item").Each(func(i int, s *goquery.Selection) {
-		name := s.AttrOr("data-oldma-item-serp-name", "N/A")
-		errStr := ""
-
-		mnn := getEAMNN(s)
-
-		price, discount, discountPercent, err := getEAPrices(s)
-		if err != nil {
-			errStr = errStr + err.Error()
-		}
-
-		producer, err := getEAProducer(s)
-		if err != nil {
-			errStr = errStr + err.Error()
-		}
-
-		rating, reviewsCount, err := getEARatingReviews(s)
-		if err != nil {
-			errStr = errStr + err.Error()
-		}
-
-		result = append(result, domain.ParsedItem{
-			Pharmacy:        "eapteka",
-			Region:          region,
-			Name:            name,
-			Mnn:             mnn,
-			Price:           price,
-			Discount:        discount,
-			DiscountPercent: discountPercent,
-			Producer:        producer,
-			Rating:          float64(rating),
-			ReviewsCount:    reviewsCount,
-			SearchValue:     pillValue,
-			Error:           errStr,
-		})
+		rawItem := getEARawItem(s)
+		rawData = append(rawData, rawItem)
 	})
 
-	var filteredResult []domain.ParsedItem
+	filteredData := rawData
 	if withFilter == true {
-		filteredResult = utils.FilterByProducer(result, pillValue)
-	} else {
-		filteredResult = result
+		filteredData = utils.FilterByProducer(rawData, pillValue)
 	}
 
-	if len(filteredResult) == 0 {
-		errF := fmt.Errorf(`не найдено препаратов удовлетворяющих запросу: len(filteredResult) == 0`)
-		return nil, errF
-	} else {
-		return filteredResult, nil
+	if len(filteredData) == 0 {
+		return nil, fmt.Errorf(`не найдено препаратов удовлетворяющих запросу: len(filteredData) == 0`)
 	}
+
+	result := utils.ParseRawData("eapteka", region, pillValue, filteredData)
+	return result, nil
 }
 
 func CreateEAContext() (context.Context, context.CancelFunc, error) {
