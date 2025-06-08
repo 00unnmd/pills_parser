@@ -2,12 +2,10 @@ package utils
 
 import (
 	"github.com/00unnmd/pills_parser/internal/domain"
-	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -66,32 +64,6 @@ func FilterByProducer[T domain.ProducerGetter](filterItems []T, pillValue string
 	}
 
 	return filtered
-}
-
-func GetPillsReqFormValues(r *http.Request) (int, int, string, string, string) {
-	page, err := strconv.Atoi(r.FormValue("page"))
-	if err != nil || page < 1 {
-		page = 1
-	}
-
-	perPage, err := strconv.Atoi(r.FormValue("perPage"))
-	if err != nil || perPage < 1 {
-		perPage = 10
-	}
-
-	sortField := r.FormValue("sort")
-	if sortField == "" {
-		sortField = "name"
-	}
-
-	sortOrder := r.FormValue("order")
-	if sortOrder == "" {
-		sortOrder = "ASC"
-	}
-
-	filter := r.FormValue("filter")
-
-	return page, perPage, sortField, sortOrder, filter
 }
 
 func FindLatestParsingFile(dir string) (string, error) {

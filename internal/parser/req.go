@@ -10,20 +10,20 @@ import (
 	"github.com/cheggaaa/pb/v3"
 )
 
-func getZSData(pillsList map[int]string, regionsList map[string]string, pillsBar *pb.ProgressBar, regionsBar *pb.ProgressBar, ozonFilter bool) []domain.ParsedItem {
+func getZSData(pillsList map[int]string, pillsBar *pb.ProgressBar, regionsBar *pb.ProgressBar, ozonFilter bool) []domain.ParsedItem {
 	var result []domain.ParsedItem
 
-	for regionKey, regionValue := range regionsList {
+	for _, regionItem := range utils.RegionsList {
 		pillsBar.SetCurrent(0)
-		regionsBar.Set("prefix", regionValue)
+		regionsBar.Set("prefix", regionItem.Value)
 
 		for _, pillValue := range pillsList {
 			pillsBar.Set("prefix", "Zdravcity: "+pillValue)
 			time.Sleep(utils.RequestDelay)
 
-			pillsForRegion, err := calls.GetZSPills(pillValue, regionKey, regionValue, ozonFilter)
+			pillsForRegion, err := calls.GetZSPills(pillValue, regionItem.ZSKey, regionItem.Value, ozonFilter)
 			if err != nil {
-				pillsForRegion = utils.CreatePIWithError(pillValue, regionValue, err, "zdravcity")
+				pillsForRegion = utils.CreatePIWithError(pillValue, regionItem.Value, err, "zdravcity")
 			}
 
 			result = append(result, pillsForRegion...)
@@ -36,14 +36,14 @@ func getZSData(pillsList map[int]string, regionsList map[string]string, pillsBar
 	return result
 }
 
-func getARData(pillsList map[int]string, regionsList map[string]string, pillsBar *pb.ProgressBar, regionsBar *pb.ProgressBar, ozonFilter bool) []domain.ParsedItem {
+func getARData(pillsList map[int]string, pillsBar *pb.ProgressBar, regionsBar *pb.ProgressBar, ozonFilter bool) []domain.ParsedItem {
 	var result []domain.ParsedItem
 
-	for regionId, regionValue := range regionsList {
+	for _, regionItem := range utils.RegionsList {
 		pillsBar.SetCurrent(0)
-		regionsBar.Set("prefix", regionValue)
+		regionsBar.Set("prefix", regionItem.Value)
 
-		_, err := calls.ChangeARRegion(regionId)
+		_, err := calls.ChangeARRegion(regionItem.ARKey)
 		if err != nil {
 			log.Println("err: ", err)
 			break
@@ -53,9 +53,9 @@ func getARData(pillsList map[int]string, regionsList map[string]string, pillsBar
 			pillsBar.Set("prefix", "AptekaRu: "+value)
 			time.Sleep(utils.RequestDelay)
 
-			pillsAllRegions, err := calls.GetARPills(value, regionValue, ozonFilter)
+			pillsAllRegions, err := calls.GetARPills(value, regionItem.Value, ozonFilter)
 			if err != nil {
-				pillsAllRegions = utils.CreatePIWithError(value, regionValue, err, "aptekaru")
+				pillsAllRegions = utils.CreatePIWithError(value, regionItem.Value, err, "aptekaru")
 			}
 
 			result = append(result, pillsAllRegions...)
@@ -68,7 +68,7 @@ func getARData(pillsList map[int]string, regionsList map[string]string, pillsBar
 	return result
 }
 
-func getEAData(pillsList map[int]string, regionsList map[string]string, pillsBar *pb.ProgressBar, regionsBar *pb.ProgressBar, ozonFilter bool) []domain.ParsedItem {
+func getEAData(pillsList map[int]string, pillsBar *pb.ProgressBar, regionsBar *pb.ProgressBar, ozonFilter bool) []domain.ParsedItem {
 	var result []domain.ParsedItem
 
 	ctx, cancel, err := calls.CreateEAContext()
@@ -78,11 +78,11 @@ func getEAData(pillsList map[int]string, regionsList map[string]string, pillsBar
 	}
 	defer cancel()
 
-	for regionKey, regionValue := range regionsList {
+	for _, regionItem := range utils.RegionsList {
 		pillsBar.SetCurrent(0)
-		regionsBar.Set("prefix", regionValue)
+		regionsBar.Set("prefix", regionItem.Value)
 
-		_, err := calls.ChangeEARegion(ctx, regionKey)
+		_, err := calls.ChangeEARegion(ctx, regionItem.EAKey)
 		if err != nil {
 			log.Println("err: ", err)
 			break
@@ -92,9 +92,9 @@ func getEAData(pillsList map[int]string, regionsList map[string]string, pillsBar
 			pillsBar.Set("prefix", "EApteka: "+value)
 			time.Sleep(utils.RequestDelay)
 
-			pillsAllRegions, err := calls.GetEAPills(ctx, value, regionKey, regionValue, ozonFilter)
+			pillsAllRegions, err := calls.GetEAPills(ctx, value, regionItem.EAKey, regionItem.Value, ozonFilter)
 			if err != nil {
-				pillsAllRegions = utils.CreatePIWithError(value, regionValue, err, "eapteka")
+				pillsAllRegions = utils.CreatePIWithError(value, regionItem.Value, err, "eapteka")
 			}
 
 			result = append(result, pillsAllRegions...)
@@ -109,12 +109,12 @@ func getEAData(pillsList map[int]string, regionsList map[string]string, pillsBar
 
 func GetOzonAllData() []domain.ParsedItem {
 	log.Println("Процесс получения данных...")
-	ZSPillsBar := pb.New(len(utils.OzonPillsList)).SetRefreshRate(time.Second * 3)
-	ZSRegionsBar := pb.New(len(utils.ZSRegions)).SetRefreshRate(time.Second * 3)
-	ARPillsBar := pb.New(len(utils.OzonPillsList)).SetRefreshRate(time.Second * 3)
-	ARRegionsBar := pb.New(len(utils.ARRegions)).SetRefreshRate(time.Second * 3)
-	EAPillsBar := pb.New(len(utils.OzonPillsList)).SetRefreshRate(time.Second * 3)
-	EARegionsBar := pb.New(len(utils.EARegions)).SetRefreshRate(time.Second * 3)
+	ZSPillsBar := pb.New(len(utils.PillsList.OZON)).SetRefreshRate(time.Second * 3)
+	ZSRegionsBar := pb.New(len(utils.RegionsList)).SetRefreshRate(time.Second * 3)
+	ARPillsBar := pb.New(len(utils.PillsList.OZON)).SetRefreshRate(time.Second * 3)
+	ARRegionsBar := pb.New(len(utils.RegionsList)).SetRefreshRate(time.Second * 3)
+	EAPillsBar := pb.New(len(utils.PillsList.OZON)).SetRefreshRate(time.Second * 3)
+	EARegionsBar := pb.New(len(utils.RegionsList)).SetRefreshRate(time.Second * 3)
 
 	ZSChan := make(chan []domain.ParsedItem)
 	ARChan := make(chan []domain.ParsedItem)
@@ -123,13 +123,13 @@ func GetOzonAllData() []domain.ParsedItem {
 	pool, _ := pb.StartPool(ZSPillsBar, ZSRegionsBar, ARPillsBar, ARRegionsBar, EAPillsBar, EARegionsBar)
 
 	go func() {
-		ZSChan <- getZSData(utils.OzonPillsList, utils.ZSRegions, ZSPillsBar, ZSRegionsBar, true)
+		ZSChan <- getZSData(utils.PillsList.OZON, ZSPillsBar, ZSRegionsBar, true)
 	}()
 	go func() {
-		ARChan <- getARData(utils.OzonPillsList, utils.ARRegions, ARPillsBar, ARRegionsBar, true)
+		ARChan <- getARData(utils.PillsList.OZON, ARPillsBar, ARRegionsBar, true)
 	}()
 	go func() {
-		EAChan <- getEAData(utils.OzonPillsList, utils.EARegions, EAPillsBar, EARegionsBar, true)
+		EAChan <- getEAData(utils.PillsList.OZON, EAPillsBar, EARegionsBar, true)
 	}()
 
 	ZSData := <-ZSChan
@@ -143,12 +143,12 @@ func GetOzonAllData() []domain.ParsedItem {
 
 func GetMNNAllData() []domain.ParsedItem {
 	log.Println("Процесс получения данных...")
-	ZSPillsBar := pb.New(len(utils.CompetitorsMNNList)).SetRefreshRate(time.Second * 3)
-	ZSRegionsBar := pb.New(len(utils.ZSRegions)).SetRefreshRate(time.Second * 3)
-	ARPillsBar := pb.New(len(utils.CompetitorsMNNList)).SetRefreshRate(time.Second * 3)
-	ARRegionsBar := pb.New(len(utils.ARRegions)).SetRefreshRate(time.Second * 3)
-	EAPillsBar := pb.New(len(utils.CompetitorsMNNList)).SetRefreshRate(time.Second * 3)
-	EARegionsBar := pb.New(len(utils.EARegions)).SetRefreshRate(time.Second * 3)
+	ZSPillsBar := pb.New(len(utils.PillsList.MNN)).SetRefreshRate(time.Second * 3)
+	ZSRegionsBar := pb.New(len(utils.RegionsList)).SetRefreshRate(time.Second * 3)
+	ARPillsBar := pb.New(len(utils.PillsList.MNN)).SetRefreshRate(time.Second * 3)
+	ARRegionsBar := pb.New(len(utils.RegionsList)).SetRefreshRate(time.Second * 3)
+	EAPillsBar := pb.New(len(utils.PillsList.MNN)).SetRefreshRate(time.Second * 3)
+	EARegionsBar := pb.New(len(utils.RegionsList)).SetRefreshRate(time.Second * 3)
 
 	ZSChan := make(chan []domain.ParsedItem)
 	ARChan := make(chan []domain.ParsedItem)
@@ -157,13 +157,13 @@ func GetMNNAllData() []domain.ParsedItem {
 	pool, _ := pb.StartPool(ZSPillsBar, ZSRegionsBar, ARPillsBar, ARRegionsBar, EAPillsBar, EARegionsBar)
 
 	go func() {
-		ZSChan <- getZSData(utils.CompetitorsMNNList, utils.ZSRegions, ZSPillsBar, ZSRegionsBar, false)
+		ZSChan <- getZSData(utils.PillsList.MNN, ZSPillsBar, ZSRegionsBar, false)
 	}()
 	go func() {
-		ARChan <- getARData(utils.CompetitorsMNNList, utils.ARRegions, ARPillsBar, ARRegionsBar, false)
+		ARChan <- getARData(utils.PillsList.MNN, ARPillsBar, ARRegionsBar, false)
 	}()
 	go func() {
-		EAChan <- getEAData(utils.CompetitorsMNNList, utils.EARegions, EAPillsBar, EARegionsBar, false)
+		EAChan <- getEAData(utils.PillsList.MNN, EAPillsBar, EARegionsBar, false)
 	}()
 
 	ZSData := <-ZSChan
@@ -177,12 +177,12 @@ func GetMNNAllData() []domain.ParsedItem {
 
 func GetCompetitorsAllData() []domain.ParsedItem {
 	log.Println("Процесс получения данных...")
-	ZSPillsBar := pb.New(len(utils.CompetitorsPillsList)).SetRefreshRate(time.Second * 3)
-	ZSRegionsBar := pb.New(len(utils.ZSRegions)).SetRefreshRate(time.Second * 3)
-	ARPillsBar := pb.New(len(utils.CompetitorsPillsList)).SetRefreshRate(time.Second * 3)
-	ARRegionsBar := pb.New(len(utils.ARRegions)).SetRefreshRate(time.Second * 3)
-	EAPillsBar := pb.New(len(utils.CompetitorsPillsList)).SetRefreshRate(time.Second * 3)
-	EARegionsBar := pb.New(len(utils.EARegions)).SetRefreshRate(time.Second * 3)
+	ZSPillsBar := pb.New(len(utils.PillsList.Competitors)).SetRefreshRate(time.Second * 3)
+	ZSRegionsBar := pb.New(len(utils.RegionsList)).SetRefreshRate(time.Second * 3)
+	ARPillsBar := pb.New(len(utils.PillsList.Competitors)).SetRefreshRate(time.Second * 3)
+	ARRegionsBar := pb.New(len(utils.RegionsList)).SetRefreshRate(time.Second * 3)
+	EAPillsBar := pb.New(len(utils.PillsList.Competitors)).SetRefreshRate(time.Second * 3)
+	EARegionsBar := pb.New(len(utils.RegionsList)).SetRefreshRate(time.Second * 3)
 
 	ZSChan := make(chan []domain.ParsedItem)
 	ARChan := make(chan []domain.ParsedItem)
@@ -191,13 +191,13 @@ func GetCompetitorsAllData() []domain.ParsedItem {
 	pool, _ := pb.StartPool(ZSPillsBar, ZSRegionsBar, ARPillsBar, ARRegionsBar, EAPillsBar, EARegionsBar)
 
 	go func() {
-		ZSChan <- getZSData(utils.CompetitorsPillsList, utils.ZSRegions, ZSPillsBar, ZSRegionsBar, false)
+		ZSChan <- getZSData(utils.PillsList.Competitors, ZSPillsBar, ZSRegionsBar, false)
 	}()
 	go func() {
-		ARChan <- getARData(utils.CompetitorsPillsList, utils.ARRegions, ARPillsBar, ARRegionsBar, false)
+		ARChan <- getARData(utils.PillsList.Competitors, ARPillsBar, ARRegionsBar, false)
 	}()
 	go func() {
-		EAChan <- getEAData(utils.CompetitorsPillsList, utils.EARegions, EAPillsBar, EARegionsBar, false)
+		EAChan <- getEAData(utils.PillsList.Competitors, EAPillsBar, EARegionsBar, false)
 	}()
 
 	ZSData := <-ZSChan
