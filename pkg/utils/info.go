@@ -8,37 +8,80 @@ var KirovFFProducerNames = []string{`Кировская фармацевтиче
 
 var RequestDelay = 5 * time.Second
 
-var ZSRegions = map[string]string{
-	"moscowregion": "Москва и область",
-	//"spb":          "Санкт-Петербург и область",
-	//"novosibirsk":  "Новосибирск",
-	//"ekb":          "Екатеринбург",
-	//"kazan":        "Казань",
-	//"nnovgorod":    "Нижний Новгород",
-	//"ufa":          "Уфа",
-	//"rostov":       "Ростов-на-Дону",
+var PharmaciesList = map[string]string{
+	"zdravcity": "Здравсити",
+	"aptekaru":  "Аптекару",
+	"eapteka":   "Еаптека",
 }
 
-var ARRegions = map[string]string{
-	"5e57803249af4c0001d64407": "Москва и область",
-	//"5e5778f0f85fde0001489df1": "Санкт-Петербург",
-	//"5e57858e2b690a0001b0977f": "Новосибирск",
-	//"5e58b8fee8d43f0001a55baf": "Екатеринбург",
-	//"6681727f3210fbd198563743": "Казань",
-	//"5e58a675cd37fa0001a7cb79": "Нижний Новгород",
-	//"5e57acd4752ac70001593b7f": "Уфа",
-	//"5e577e97a2efde00019e63e4": "Ростов-на-Дону",
+type Region struct {
+	ZSKey string
+	ARKey string
+	EAKey string
+	Value string
 }
 
-var EARegions = map[string]string{
-	"msk": "Москва и область",
-	//"spb": "Санкт-Петербург и область",
-	//"novosibirsk":    "Новосибирск",
-	//"ekb":            "Екатеринбург",
-	//"kazan":          "Казань",
-	//"nn":             "Нижний Новгород",
-	//"ufa":            "Уфа",
-	//"rostov-na-donu": "Ростов-на-Дону",
+var RegionsList = []Region{
+	{
+		ZSKey: "moscowregion",
+		ARKey: "5e57803249af4c0001d64407",
+		EAKey: "msk",
+		Value: "Москва",
+	},
+	{
+		ZSKey: "spb",
+		ARKey: "5e5778f0f85fde0001489df1",
+		EAKey: "spb",
+		Value: "Санкт-Петербург",
+	},
+	{
+		ZSKey: "novosibirsk",
+		ARKey: "5e57858e2b690a0001b0977f",
+		EAKey: "novosibirsk",
+		Value: "Новосибирск",
+	},
+	{
+		ZSKey: "ekb",
+		ARKey: "5e58b8fee8d43f0001a55baf",
+		EAKey: "ekb",
+		Value: "Екатеринбург",
+	},
+	{
+		ZSKey: "kazan",
+		ARKey: "6681727f3210fbd198563743",
+		EAKey: "kazan",
+		Value: "Казань",
+	},
+	{
+		ZSKey: "nnovgorod",
+		ARKey: "5e58a675cd37fa0001a7cb79",
+		EAKey: "nn",
+		Value: "Нижний Новгород",
+	},
+	{
+		ZSKey: "ufa",
+		ARKey: "5e57acd4752ac70001593b7f",
+		EAKey: "ufa",
+		Value: "Уфа",
+	},
+	{
+		ZSKey: "rostov",
+		ARKey: "5e577e97a2efde00019e63e4",
+		EAKey: "rostov-na-donu",
+		Value: "Ростов-на-Дону",
+	},
+}
+
+type Pills struct {
+	OZON        map[int]string
+	MNN         map[int]string
+	Competitors map[int]string
+}
+
+var PillsList = Pills{
+	OZON:        OzonPillsList,
+	MNN:         MNNPillsList,
+	Competitors: CompetitorsPillsList,
 }
 
 var OzonPillsList = map[int]string{
@@ -86,7 +129,7 @@ var OzonPillsList = map[int]string{
 	//41: "Висмута трикалия дицитрат",
 }
 
-var CompetitorsMNNList = map[int]string{
+var MNNPillsList = map[int]string{
 	//	0:  "Итоприд",
 	//	1:  "Адеметионин",
 	//	2:  "Триметазидин",
@@ -144,34 +187,34 @@ var CompetitorsMNNList = map[int]string{
 }
 
 var CompetitorsPillsList = map[int]string{
-	0:  "Де-нол",
-	1:  "Улькавис",
-	2:  "Новобисмол",
-	3:  "Витридинол",
-	4:  "Виканол лайф",
-	5:  "Хели-стоп",
-	6:  "Бисмутен",
-	7:  "Таниртак",
-	8:  "Эскейп",
-	9:  "Кардиомагнил",
-	10: "Тромбитал",
-	11: "Кардиаск",
-	12: "Кардевит",
-	13: "Тромбостабил",
-	//	14:  "Магникардил",
-	//	15:  "Фастокар",
-	//	16:  "Одекромон",
-	//	17:  "Одестон",
-	//	18:  "Мильгамма",
-	//	19:  "Комбилипен",
-	//	20:  "Витапрайм",
-	//	21:  "Мотилиум",
-	//	22:  "Мотилак",
-	//	23:  "Пассажикс",
-	//	24:  "Мотониум",
-	//	25:  "Драспазол",
-	//	26:  "Мотогастрик",
-	//	27:  "Нормотил",
+	//0:  "Де-нол",
+	//1:  "Улькавис",
+	//2:  "Новобисмол",
+	//3:  "Витридинол",
+	//4:  "Виканол лайф",
+	//5:  "Хели-стоп",
+	//6:  "Бисмутен",
+	//7:  "Таниртак",
+	//8:  "Эскейп",
+	//9:  "Кардиомагнил",
+	//10: "Тромбитал",
+	//11: "Кардиаск",
+	//12: "Кардевит",
+	//13: "Тромбостабил",
+	14: "Магникардил",
+	15: "Фастокар",
+	16: "Одекромон",
+	17: "Одестон",
+	18: "Мильгамма",
+	19: "Комбилипен",
+	20: "Витапрайм",
+	21: "Мотилиум",
+	22: "Мотилак",
+	23: "Пассажикс",
+	24: "Мотониум",
+	25: "Драспазол",
+	26: "Мотогастрик",
+	27: "Нормотил",
 	//	28:  "Мотинорм",
 	//	29:  "Мотижект",
 	//	30:  "Домстал",

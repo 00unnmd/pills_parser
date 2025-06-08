@@ -9,6 +9,7 @@ import (
 func SetupRouter(db *sql.DB) (*mux.Router, error) {
 	authHandler := service.NewAuthHandler(db)
 	pillsHandler := service.NewPillsHandler(db)
+	optionsHandler := service.NewOptionsHandler(db)
 
 	r := mux.NewRouter()
 	apiRouter := r.PathPrefix("/api").Subrouter()
@@ -20,6 +21,7 @@ func SetupRouter(db *sql.DB) (*mux.Router, error) {
 	pillsRouter.HandleFunc("/mnn", pillsHandler.GetMNNPills).Methods("GET")
 	pillsRouter.HandleFunc("/competitors", pillsHandler.GetCompetitorsPills).Methods("GET")
 	pillsRouter.HandleFunc("/export", pillsHandler.ExportPillsXLSX).Methods("GET")
+	pillsRouter.HandleFunc("/options", optionsHandler.GetOptions).Methods("GET")
 
 	return r, nil
 }
