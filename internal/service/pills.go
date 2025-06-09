@@ -36,9 +36,9 @@ func (h *PillsHandler) GetOzonPills(w http.ResponseWriter, r *http.Request) {
 		ApplySorting().
 		ApplyFilters()
 
-	data, err := h.executeQuery(queryBuilder.Build(), queryBuilder.Args...)
+	data, err := h.executePillsQuery(queryBuilder.Build(), queryBuilder.Args...)
 	if err != nil {
-		http.Error(w, "executeQuery err: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "executePillsQuery err: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -77,9 +77,9 @@ func (h *PillsHandler) GetMNNPills(w http.ResponseWriter, r *http.Request) {
 		ApplySorting().
 		ApplyFilters()
 
-	data, err := h.executeQuery(queryBuilder.Build(), queryBuilder.Args...)
+	data, err := h.executePillsQuery(queryBuilder.Build(), queryBuilder.Args...)
 	if err != nil {
-		http.Error(w, "executeQuery err: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "executePillsQuery err: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -118,9 +118,9 @@ func (h *PillsHandler) GetCompetitorsPills(w http.ResponseWriter, r *http.Reques
 		ApplySorting().
 		ApplyFilters()
 
-	data, err := h.executeQuery(queryBuilder.Build(), queryBuilder.Args...)
+	data, err := h.executePillsQuery(queryBuilder.Build(), queryBuilder.Args...)
 	if err != nil {
-		http.Error(w, "executeQuery err: "+err.Error(), http.StatusInternalServerError)
+		http.Error(w, "executePillsQuery err: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -141,7 +141,7 @@ func (h *PillsHandler) GetCompetitorsPills(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-func (h *PillsHandler) executeQuery(query string, args ...interface{}) ([]domain.ParsedItem, error) {
+func (h *PillsHandler) executePillsQuery(query string, args ...interface{}) ([]domain.ParsedItem, error) {
 	rows, err := h.db.Query(query, args...)
 	if err != nil {
 		return nil, err
@@ -206,7 +206,7 @@ func parsePillsReqQuery(r *http.Request) (*domain.TableReqParams, error) {
 			return nil, fmt.Errorf("invalid date format: %v", dateStr)
 		}
 	}
-	if len(params.Pharmacy) > 3 || len(params.CreatedAt) > 10 || len(params.Region) > 7 {
+	if len(params.Pharmacy) > 3 || len(params.CreatedAt) > 10 || len(params.Region) > 8 {
 		return nil, fmt.Errorf("too many values in pharmacy || createdAt || region")
 	}
 

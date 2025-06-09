@@ -2,12 +2,7 @@ package utils
 
 import (
 	"github.com/00unnmd/pills_parser/internal/domain"
-	"os"
-	"path/filepath"
-	"regexp"
-	"sort"
 	"strings"
-	"time"
 )
 
 func CreatePIWithError(pillValue string, regionValue string, err error, pharmacy string) []domain.ParsedItem {
@@ -64,52 +59,4 @@ func FilterByProducer[T domain.ProducerGetter](filterItems []T, pillValue string
 	}
 
 	return filtered
-}
-
-func FindLatestParsingFile(dir string) (string, error) {
-	files, err := os.ReadDir(dir)
-	if err != nil {
-		return "", err
-	}
-
-	patternReg := regexp.MustCompile(`^parsing-go-(\d{2})\.(\d{2})\.(\d{4})\.xlsx$`)
-
-	var validFiles []domain.FileInfo
-
-	for _, file := range files {
-		if file.IsDir() {
-			continue
-		}
-
-		matches := patternReg.FindStringSubmatch(file.Name())
-		if len(matches) != 4 {
-			continue
-		}
-
-		fileDate, err := time.Parse("02.01.2006", matches[1]+"."+matches[2]+"."+matches[3])
-		if err != nil {
-			continue
-		}
-
-		info, err := file.Info()
-		if err != nil {
-			continue
-		}
-
-		validFiles = append(validFiles, domain.FileInfo{
-			Path:    filepath.Join(dir, file.Name()),
-			ModTime: info.ModTime(),
-			Date:    fileDate,
-		})
-	}
-
-	if len(validFiles) == 0 {
-		return "", os.ErrNotExist
-	}
-
-	sort.Slice(validFiles, func(i, j int) bool {
-		return validFiles[i].Date.After(validFiles[j].Date)
-	})
-
-	return validFiles[0].Path, nil
 }
