@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/chromedp/cdproto/network"
@@ -182,7 +183,7 @@ func CreateEAContext() (context.Context, context.CancelFunc, error) {
 
 		network.Enable(),
 		chromedp.Navigate(os.Getenv("EA_REQ_SEARCH")+"some"),
-		chromedp.Sleep(utils.RequestDelay),
+		chromedp.Sleep(5*time.Second),
 	)
 	if err != nil {
 		allocCancel()

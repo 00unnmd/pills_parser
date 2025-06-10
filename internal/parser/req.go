@@ -19,7 +19,7 @@ func getZSData(pillsList map[int]string, pillsBar *pb.ProgressBar, regionsBar *p
 
 		for _, pillValue := range pillsList {
 			pillsBar.Set("prefix", "Zdravcity: "+pillValue)
-			time.Sleep(utils.RequestDelay)
+			utils.RunRandomReqDelay(3, 4)
 
 			pillsForRegion, err := calls.GetZSPills(pillValue, regionItem.ZSKey, regionItem.Value, ozonFilter)
 			if err != nil {
@@ -51,7 +51,7 @@ func getARData(pillsList map[int]string, pillsBar *pb.ProgressBar, regionsBar *p
 
 		for _, value := range pillsList {
 			pillsBar.Set("prefix", "AptekaRu: "+value)
-			time.Sleep(utils.RequestDelay)
+			utils.RunRandomReqDelay(3, 4)
 
 			pillsAllRegions, err := calls.GetARPills(value, regionItem.Value, ozonFilter)
 			if err != nil {
@@ -90,7 +90,7 @@ func getEAData(pillsList map[int]string, pillsBar *pb.ProgressBar, regionsBar *p
 
 		for _, value := range pillsList {
 			pillsBar.Set("prefix", "EApteka: "+value)
-			time.Sleep(utils.RequestDelay)
+			utils.RunRandomReqDelay(3, 4)
 
 			pillsAllRegions, err := calls.GetEAPills(ctx, value, regionItem.EAKey, regionItem.Value, ozonFilter)
 			if err != nil {

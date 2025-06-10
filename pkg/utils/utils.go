@@ -2,8 +2,17 @@ package utils
 
 import (
 	"github.com/00unnmd/pills_parser/internal/domain"
+	"math/rand"
 	"strings"
+	"time"
 )
+
+func RunRandomReqDelay(delay int, jitter int) {
+	requestDelay := time.Duration(delay) * time.Second
+	jitterDelay := time.Duration(rand.Intn(jitter)) * time.Second
+
+	time.Sleep(requestDelay + jitterDelay)
+}
 
 func CreatePIWithError(pillValue string, regionValue string, err error, pharmacy string) []domain.ParsedItem {
 	return []domain.ParsedItem{

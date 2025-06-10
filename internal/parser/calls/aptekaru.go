@@ -9,7 +9,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 )
 
 func getIdFromUrl(url string) (string, error) {
@@ -133,7 +132,7 @@ func GetARPills(pillValue string, regionValue string, withFilter bool) ([]domain
 		}
 
 		page++
-		time.Sleep(utils.RequestDelay)
+		utils.RunRandomReqDelay(2, 2)
 	}
 
 	filteredData := rawResult
@@ -159,7 +158,7 @@ func GetARPills(pillValue string, regionValue string, withFilter bool) ([]domain
 	result := utils.ParseRawData("aptekaru", regionValue, pillValue, searchItems)
 
 	for _, item := range groupItems {
-		time.Sleep(utils.RequestDelay)
+		utils.RunRandomReqDelay(2, 2)
 
 		groupItemInfos, err := getARGroupInfo(item)
 		if err != nil {
