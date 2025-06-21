@@ -1,6 +1,9 @@
 package domain
 
-import "strings"
+import (
+	"math"
+	"strings"
+)
 
 type arPhoto struct {
 	Original     string
@@ -103,8 +106,8 @@ func (p ARResultItem) GetFields(pharmacy string, region string, pill string) Par
 		Region:          region,
 		Name:            p.TradeName,
 		Mnn:             mnn,
-		Price:           p.MinPrice,
-		Discount:        p.Profit,
+		Price:           int(math.Round(p.MinPrice)),
+		Discount:        int(math.Round(p.Profit)),
 		DiscountPercent: p.DiscountPercent,
 		Producer:        p.Vendor,
 		Rating:          p.GroupRating,
