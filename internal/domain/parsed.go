@@ -6,8 +6,8 @@ type ParsedItem struct {
 	Region          string  `json:"region"`
 	Name            string  `json:"name"`
 	Mnn             string  `json:"mnn"`
-	Price           float64 `json:"price"`
-	Discount        float64 `json:"discount"`
+	Price           int     `json:"price"`
+	Discount        int     `json:"discount"`
 	DiscountPercent int     `json:"discountPercent"`
 	Producer        string  `json:"producer"`
 	Rating          float64 `json:"rating"`

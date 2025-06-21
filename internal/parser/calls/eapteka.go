@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/00unnmd/pills_parser/internal/domain"
 	"github.com/00unnmd/pills_parser/pkg/utils"
-	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -46,17 +45,17 @@ func getEAMNN(sel *goquery.Selection) string {
 	return mnnName
 }
 
-func getEADiscount(price float64, priceOld float64) (float64, int) {
+func getEADiscount(price int, priceOld int) (int, int) {
 	if priceOld == 0 {
 		return 0, 0
 	} else {
 		discount := priceOld - price
-		discountPercent := int(math.Round(discount / (priceOld / 100)))
+		discountPercent := discount / (priceOld / 100)
 		return discount, discountPercent
 	}
 }
 
-func getEAPrices(sel *goquery.Selection) (float64, float64, int, error) {
+func getEAPrices(sel *goquery.Selection) (int, int, int, error) {
 	isInStock := sel.AttrOr("data-oldma-item-serp-is-in-stock", "0")
 	if isInStock != "1" {
 		return 0, 0, 0, nil
@@ -66,15 +65,15 @@ func getEAPrices(sel *goquery.Selection) (float64, float64, int, error) {
 	priceOldSel := sel.Find("span.listing-card__price-old")
 	priceOld := priceOldSel.AttrOr("data-old-price", "0")
 
-	priceFl, errP := strconv.ParseFloat(strings.ReplaceAll(price, " ", ""), 64)
-	priceOldFl, errPO := strconv.ParseFloat(strings.ReplaceAll(priceOld, " ", ""), 64)
+	priceInt, errP := strconv.Atoi(strings.ReplaceAll(price, " ", ""))
+	priceOldInt, errPO := strconv.Atoi(strings.ReplaceAll(priceOld, " ", ""))
 	if errP != nil || errPO != nil {
 		return 0, 0, 0, fmt.Errorf("getEAPrices err converting string to int: %w, %w", errP, errPO)
 	}
 
-	discount, discountPercent := getEADiscount(priceFl, priceOldFl)
+	discount, discountPercent := getEADiscount(priceInt, priceOldInt)
 
-	return priceFl, discount, discountPercent, nil
+	return priceInt, discount, discountPercent, nil
 }
 
 func getEAProducer(sel *goquery.Selection) (string, error) {

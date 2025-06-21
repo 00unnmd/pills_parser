@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"math"
 	"strings"
 	"time"
 )
@@ -140,8 +141,8 @@ func (p ARItemInfo) GetFields(pharmacy string, region string, pill string) Parse
 		Region:          region,
 		Name:            p.Name,
 		Mnn:             mnn,
-		Price:           p.Price,
-		Discount:        p.Profit,
+		Price:           int(math.Round(p.Price)),
+		Discount:        int(math.Round(p.Profit)),
 		DiscountPercent: p.DiscountPercent,
 		Producer:        p.Vendor,
 		Rating:          p.Rating,

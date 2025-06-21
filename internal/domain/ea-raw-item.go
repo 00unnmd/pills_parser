@@ -3,8 +3,8 @@ package domain
 type EARawItem struct {
 	Name            string
 	Mnn             string
-	Price           float64
-	Discount        float64
+	Price           int
+	Discount        int
 	DiscountPercent int
 	Producer        string
 	Rating          float64
